@@ -1,6 +1,17 @@
 import {compiled, ABI} from './config';
+const Promise = require("bluebird");
 
 const delay = async n => new Promise(acc => setTimeout(acc, n));
+
+const attributes = [
+  'beneficiary',
+  'auctionEnd',
+  'auctionTitle',
+  'auctionDescription',
+  // 'minimumBid',
+  'highestBidder',
+  'highestBid',
+];
 
 const AuctionContractor = function(web3, from, gas = 3000000) {
   const contract = web3.eth.contract(ABI);
@@ -39,9 +50,11 @@ const AuctionContractor = function(web3, from, gas = 3000000) {
           return acc(receipt.contractAddress);
         });
     }),
-    at: contract.at.bind(contract),
+    at: address => {
+      // return contract.at(contract);
+      return Promise.promisifyAll(contract.at(address));
+    }
   }
 }
-
 
 export default AuctionContractor;

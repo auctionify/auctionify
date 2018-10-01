@@ -172,15 +172,39 @@ class CreateAuction extends Component {
 class ShowAuction extends Component {
   constructor(props) {
     super(props);
-    // const contractor = new AuctionContractor(window.web3, this.state.account); // window.web3 or this.state.web3
-    // this.state = {
-    //   contract
-    // }
+    
+    this.state = {
+      contract: {},
+      accounts: [],
+      account: null,
+    }
+
+    this.setup();
+  }
+
+  async setup() {
+    const web3 = await getWeb3();
+    const accounts = await web3.eth.getAccounts();
+    const contractor = new AuctionContractor(window.web3, accounts[0]); // window.web3 or this.state.web3
+    this.contract = contractor.at(this.props.match.params.address)
+    this.setState({
+      web3,
+      accounts,
+      account: accounts[0],
+      contract: {
+        title: await this.contract.auctionTitleAsync(),
+        description: await this.contract.auctionDescriptionAsync(),
+      }
+    });
   }
 
   render() {
     return (
-      <div>{this.props.match.params.address}</div>
+      <div>
+        <h1>{this.state.contract.title}</h1>
+        <p>{this.state.contract.description}</p>
+        <div>{this.props.match.params.address}</div>
+      </div>
     );
   }
 }
