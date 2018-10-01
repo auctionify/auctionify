@@ -36,7 +36,7 @@ const AuctionContractor = function(web3, from, gas = 3000000) {
         async (err, deployHash) => {
           if (err) return rej(err);
           const receipt = await getTransactionReceipt(deployHash.transactionHash);
-          return acc(contract.at(receipt.contractAddress));
+          return acc(receipt.contractAddress);
         });
     }),
     at: contract.at.bind(contract),

@@ -15,7 +15,7 @@ import {
   InputGroupAddon,
   InputGroup,
 } from 'reactstrap';
-import { HashRouter, Route, Link, NavLink } from 'react-router-dom'
+import { HashRouter, Route, Link, NavLink, withRouter} from 'react-router-dom'
 import DatePicker from 'react-datepicker';
 
 import {getWeb3} from './web3';
@@ -140,18 +140,16 @@ class CreateAuction extends Component {
 
   async createAuction(e) {
     e.preventDefault();
-    console.log(this.state.auctionEnd);
-    // const contractor = new AuctionContractor(window.web3, this.state.account); // window.web3 or this.state.web3
-    // const contract = await contractor.create({
-    //   title: this.state.title,
-    //   auctionEnd: ""+Math.round(new Date().getTime()/1000+1000000),
-    //   beneficiary: this.state.account,
-    //   description: this.state.description,
-    //   minimumBid: '10000000000',
-    //   // minimumBid: this.state.minimumBid,
-    // });
-    // console.log(contract);
-    // contract.auctionTitle(console.log)
+    const contractor = new AuctionContractor(window.web3, this.state.account); // window.web3 or this.state.web3
+    const address = await contractor.create({
+      title: this.state.title,
+      auctionEnd: ""+Math.round(new Date().getTime()/1000+1000000),
+      beneficiary: this.state.account,
+      description: this.state.description,
+      minimumBid: '10000000000',
+      // minimumBid: this.state.minimumBid,
+    });
+    this.props.history.push(`/auction/${address}`);
   }
 
   render() {
@@ -171,14 +169,33 @@ class CreateAuction extends Component {
   }
 }
 
+class ShowAuction extends Component {
+  constructor(props) {
+    super(props);
+    // const contractor = new AuctionContractor(window.web3, this.state.account); // window.web3 or this.state.web3
+    // this.state = {
+    //   contract
+    // }
+  }
+
+  render() {
+    return (
+      <div>{this.props.match.params.address}</div>
+    );
+  }
+}
+
 
 class App extends Component {
   render() {
     return (
-      <Container>
-        <h1 className="brand-title">Auctionify</h1>
-        <CreateAuction />
-      </Container>
+      <HashRouter>
+        <Container>
+          <h1 className="brand-title">Auctionify</h1>
+          <Route path="/" exact={true} component={withRouter(CreateAuction)}/>
+          <Route path="/auction/:address" component={withRouter(ShowAuction)}/>
+        </Container>
+      </HashRouter>
     );
   }
 }
