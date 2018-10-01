@@ -26,3 +26,32 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+h1.brand-title {
+  font-family: 'Ubuntu', sans-serif;
+  font-weight: normal;
+  margin-bottom: 120px; 
+  margin-top: 20px;
+  text-align: center;
+}
+
+.submit {
+  display: block;
+  margin: auto;
+}
+
+.react-datepicker__time-list {
+  padding: 0;
+}
+
+input.datepicker {
+  display: block;
+  width: 100%;
+}
+.react-datepicker__input-container, .react-datepicker-wrapper {
+  width: 100%;
+}
+
+.datepicker-parent > div {
+  width: 100%;
+}
