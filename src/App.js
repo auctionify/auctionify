@@ -12,6 +12,7 @@ import {
   Input,
   FormText,
   Col,
+  Row,
   InputGroupAddon,
   InputGroup,
 } from 'reactstrap';
@@ -29,18 +30,17 @@ const FormInput = (props) => {
     append = (<InputGroupAddon addonType="append">{props.append}</InputGroupAddon>)
   }
 
+  const className = `flyingLabel ${(props.showLabel || props.value)?"visible":""}`;
+
+    
   return (
-    <FormGroup row>
-      <Label for={props.name} sm={2}>{props.label}</Label>
-      <Col sm={10}>
-        <InputGroup>
-          <Input onChange={props.onChange} value={props.value} bsSize={props.size || "lg"} type={props.type || "text"} name={props.name} id={props.name} placeholder={props.placeholder}>
-            {props.children}
-          </Input>
-          {append}
-        </InputGroup>
-      </Col>
-    </FormGroup>
+    <InputGroup>
+      <Label className={className} for={props.name}>{props.label}</Label>
+      <Input autoComplete="off" min={props.min} max={props.max} step={props.step} onChange={props.onChange} value={props.value} bsSize={props.size || "lg"} type={props.type || "text"} name={props.name} id={props.name} placeholder={props.placeholder}>
+        {props.children}
+      </Input>
+      {append}
+    </InputGroup>
   );
 }
 
@@ -58,25 +58,22 @@ const FormDescription = (props) => {
 }
 
 const FormDatePicker = props => {
+  const className = `flyingLabel ${(props.showLabel || props.value)?"visible":""}`;
   return (
-    <FormGroup row>
-      <Label for={props.name} sm={2}>{props.label}</Label>
-      <Col sm={10}>
-        <InputGroup className="datepicker-parent">
-          <DatePicker
-            selected={props.value}
-            onChange={props.onChange}
-            showTimeSelect
-            timeFormat="HH:mm"
-            timeIntervals={15}
-            dateFormat="LLL"
-            timeCaption="time"
-            className="form-control-lg form-control datepicker"
-            minDate={moment().add(1, 'hours')}
-          />
-        </InputGroup>
-      </Col>
-    </FormGroup>
+    <InputGroup className="datepicker-parent">
+      <Label className={className} for={props.name}>{props.label}</Label>
+      <DatePicker
+        selected={props.value}
+        onChange={props.onChange}
+        showTimeSelect
+        timeFormat="HH:mm"
+        timeIntervals={15}
+        dateFormat="LLL"
+        timeCaption="time"
+        className="form-control-lg form-control datepicker"
+        minDate={moment().add(1, 'hours')}
+      />
+    </InputGroup>
   );
 }
 
@@ -88,7 +85,7 @@ class CreateAuction extends Component {
       accounts: [],
       title: '',
       description: '',
-      minimumBid: '',
+      minimumBid: 0.000001,
       auctionEnd: moment().add(1, 'days'),
     };
     this.setup().then(() => console.log("setup completed"));
@@ -121,9 +118,6 @@ class CreateAuction extends Component {
       accounts,
       account: accounts[0],
     });
-    // const contractor = new AuctionContractor(window.web3, accounts[0]);
-    // const contract = contractor.at('0x597ade7923ecc17626d38fe11313c77a20ab9acb')
-    
     // contract.HighestBidIncreased().watch((err, result) => {
     //   console.log(err, result)
     // });
@@ -151,19 +145,41 @@ class CreateAuction extends Component {
     });
     this.props.history.push(`/auction/${address}`);
   }
+        // <FormDescription>{this.timeToAuctionEnd()}</FormDescription>
 
   render() {
     return (
-      <Form onSubmit={this.createAuction}>
-        <FormInput name="title" label="Title" placeholder="My kidney" onChange={this.onInputChange} value={this.state.title} />
-        <FormInput name="description" label="Description" placeholder="Used for 28 years" onChange={this.onInputChange} value={this.state.description} />
-        <FormDescription>{this.timeToAuctionEnd()}</FormDescription>
-        <FormDatePicker name="auctionEnd" label="Date" placeholder="28 years" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
-        <FormInput name="minimumBid" label="Minimum Bid" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.minimumBid} />
-        <FormInput name="account" label="Account" type="select" onChange={this.onInputChange} value={this.state.account}>
-          {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
-        </FormInput>
-        <Button className="submit" color="primary" size="lg">Create</Button>
+      <Form onSubmit={this.createAuction} id="auctionForm">
+        <Row>
+          <Col>
+            <FormInput name="title" label="Title" placeholder="Auction Title" onChange={this.onInputChange} value={this.state.title} />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <FormInput name="description" label="Description" placeholder="Auction Description" onChange={this.onInputChange} value={this.state.description} />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" placeholder="28 years" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
+          </Col>
+          <Col>
+            <FormInput min={0} step={0.000001} showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.minimumBid} />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <FormInput showLabel={true} name="account" label="Account" type="select" onChange={this.onInputChange} value={this.state.account}>
+              {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
+            </FormInput>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Button id="createAuction" color="primary" size="lg">Create</Button>
+          </Col>
+        </Row>
       </Form>
     );
   }
@@ -209,13 +225,23 @@ class ShowAuction extends Component {
   }
 }
 
+const Underline = () => (<div className="underline"></div>);
 
 class App extends Component {
   render() {
     return (
       <HashRouter>
-        <Container>
-          <h1 className="brand-title">Auctionify</h1>
+        <Container id="main">
+          <Row>
+            <Col>
+              <h1 className="brand-title">&bull; Auctionify &bull;</h1>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Underline />
+            </Col>
+          </Row>
           <Route path="/" exact={true} component={withRouter(CreateAuction)}/>
           <Route path="/auction/:address" component={withRouter(ShowAuction)}/>
         </Container>
