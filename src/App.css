@@ -11,6 +11,11 @@ body {
   margin: 60px auto;
   padding: 0px 60px 60px 60px;
 }
+@media (max-width: 768px) {
+  #main {
+    padding: 0px 20px 20px 20px;
+  }
+}
 
 h1.brand-title {
   color: #474544;
@@ -20,6 +25,7 @@ h1.brand-title {
   text-align: center;
   text-transform: uppercase;
   margin: 35px;
+  white-space: nowrap;
 }
 
 .underline {
@@ -94,7 +100,7 @@ textarea:focus {
   -webkit-box-shadow: none !important;
 }
 
-button#createAuction {
+button#createAuction, button#bid {
   background: none;
   border-radius: 0;
   -webkit-appearance: none;
@@ -107,13 +113,17 @@ button#createAuction {
   margin: 50px auto 10px auto;
   display: block;
 }
+button#bid {
+  margin: 10px auto;
+  width: 100%;
+}
 
-button#createAuction:hover {
+button#createAuction:hover, button#bid:hover {
   background: #474544;
   color: #EEE;
 }
 
-button#createAuction:focus {
+button#createAuction:focus, button#bid:focus {
   outline: 0;
 }
 
@@ -122,3 +132,58 @@ select {
 }
 
 
+.row.inset {
+  margin: 0px -60px;
+  padding: 40px;
+  border: 1px solid #ffffff;
+  border-width: 1px 0px;
+}
+
+#auction-title {
+  text-transform: uppercase;
+  text-align: center;
+  font-weight: 700;
+  font-size: 3em;
+}
+div.countdown {
+  text-align: center;
+  white-space: nowrap;
+}
+div.countdown .time {
+  background: #474544;
+  display: inline-block;
+  border-radius: 3px;
+  width: 80px;
+  height: 80px;
+  font-size: 45px;
+  line-height: 80px;
+  text-align: center;
+  color: #fff;
+}
+
+div.countdown .separater {
+  color: #474544;
+  display: inline-block;
+  width: 32px;
+  height: 80px;
+  font-size: 45px;
+  line-height: 80px;
+  text-align: center;
+  font-weight: 700;
+}
+
+
+div.highest-bid {
+  display: inline-block;
+  width: auto;
+  margin: 20px auto;
+  background: #474544;
+  border-radius: 3px;
+  text-align: center;
+  color: #fff;
+  padding: 10px;
+}
+div.highest-bid small {
+  font-size: 12px;
+  text-transform: uppercase;
+}
