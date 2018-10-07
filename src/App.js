@@ -3,6 +3,7 @@ import moment from 'moment';
 import InputMoment from 'input-moment';
 import 'input-moment/dist/input-moment.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './datepicker.css'
 
 import {
   Container,
