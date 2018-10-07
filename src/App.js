@@ -21,7 +21,7 @@ import {
 import { HashRouter, Route, Link, NavLink, withRouter} from 'react-router-dom'
 
 import {getWeb3} from './web3';
-import AuctionContractor from './contract';
+import {getTransactionReceipt, AuctionContractor} from './contract';
 import './App.css';
 
 
@@ -151,7 +151,6 @@ class CreateAuction extends Component {
     this.onInputChange = this.onInputChange.bind(this);
     this.createAuction = this.createAuction.bind(this);
     this.onDateChange = this.onDateChange.bind(this);
-    this.timeToAuctionEnd = this.timeToAuctionEnd.bind(this);
   }
 
   onInputChange({target}) {
@@ -178,18 +177,6 @@ class CreateAuction extends Component {
       accounts,
       account: accounts[0],
     });
-    // contract.HighestBidIncreased().watch((err, result) => {
-    //   console.log(err, result)
-    // });
-
-    // contract.bid.sendTransaction({
-    //   value: window.web3.toWei(2, 'ether')
-    // }, console.log)
-
-  }
-
-  timeToAuctionEnd() {
-    return this.state.auctionEnd.fromNow();
   }
 
   async createAuction(e) {
@@ -205,7 +192,6 @@ class CreateAuction extends Component {
     });
     this.props.history.push(`/auction/${address}`);
   }
-        // <FormDescription>{this.timeToAuctionEnd()}</FormDescription>
 
   render() {
     return (
@@ -249,15 +235,40 @@ class CreateAuction extends Component {
   }
 }
 
+
+const CountDown = props => {
+  if (!props.to || !props.now) return <div></div>;
+  const duration = moment.duration(props.to-props.now);
+
+  const pad = n => (""+n).padStart(2, '0');
+  return (
+    <div className="countdown">
+      <span className="time">{pad(duration.days())}</span>
+      <span className="separater">:</span>
+      <span className="time">{pad(duration.hours())}</span>
+      <span className="separater">:</span>
+      <span className="time">{pad(duration.minutes())}</span>
+      <span className="separater">:</span>
+      <span className="time">{pad(duration.seconds())}</span>
+    </div>
+  );
+}
+
 class ShowAuction extends Component {
   constructor(props) {
     super(props);
     
     this.state = {
+      loading: true,
       contract: {},
       accounts: [],
       account: null,
+      now: moment(),
+      bidAmount: 0,
     }
+
+    this.onInputChange = this.onInputChange.bind(this);
+    this.bid = this.bid.bind(this);
 
     this.setup();
   }
@@ -266,28 +277,113 @@ class ShowAuction extends Component {
     const web3 = await getWeb3();
     const accounts = await web3.eth.getAccounts();
     const contractor = new AuctionContractor(window.web3, accounts[0]); // window.web3 or this.state.web3
-    this.contract = contractor.at(this.props.match.params.address)
+    this.contract = contractor.at(this.props.match.params.address);
+
+    const detail = {
+      title: await this.contract.auctionTitleAsync(),
+      description: await this.contract.auctionDescriptionAsync(),
+      highestBidder: await this.contract.highestBidderAsync(),
+      minimumBid: await this.contract.minimumBidAsync(),
+    }
+
+    const deadline = await this.contract.auctionEndAsync();
+    detail.auctionEnd = moment(deadline.toFixed()*1000);
+
+    const minimumBid = await this.contract.minimumBidAsync();
+    detail.minimumBid = window.web3.fromWei(minimumBid).toFixed();
+
+    const highestBid = await this.contract.highestBidAsync();
+    detail.highestBid = window.web3.fromWei(highestBid).toFixed();
+
     this.setState({
       web3,
       accounts,
       account: accounts[0],
-      contract: {
-        title: await this.contract.auctionTitleAsync(),
-        description: await this.contract.auctionDescriptionAsync(),
-      }
+      ...detail,
+      loading: false,
+      bidAmount: Math.max(detail.highestBid, detail.highestBid)
+    });
+
+    console.log(detail);
+    window.contract = this.contract;
+
+    this.contract.HighestBidIncreased().watch((err, result) => {
+      if (err) return;
+      const highestBidder = result.args.bidder;
+      const highestBid = window.web3.fromWei(result.args.amount).toFixed();
+
+      this.setState({
+        highestBidder,
+        highestBid,
+      });
+    });
+
+    setInterval(() => {
+      this.setState({
+        now: moment(),
+      });
+    }, 1000);
+  }
+
+  onInputChange({target}) {
+    const value = target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  }
+
+  bid(e) {
+    e.preventDefault();
+    this.contract.bid.sendTransaction({
+      value: window.web3.toWei(this.state.bidAmount, 'ether')
+    }, async (err, transactionHash) => {
+      if (err) throw err;
+      console.log(await getTransactionReceipt(window.web3, transactionHash));
     });
   }
 
   render() {
     return (
-      <div>
-        <h1>{this.state.contract.title}</h1>
-        <p>{this.state.contract.description}</p>
-        <div>{this.props.match.params.address}</div>
-      </div>
+      <React.Fragment>
+        <Row><Col>
+          <h1 id="auction-title">{this.state.title}</h1>
+        </Col></Row>
+        <Row><Col>
+          <CountDown now={this.state.now} to={this.state.auctionEnd} />
+        </Col></Row>
+        <Row>
+          <Col md={{offset: 3, size: 6}} className="text-center">
+            <div  className="highest-bid">
+              <h3 className="emph">{this.state.highestBid} ETH</h3>
+              <small>highest bid</small>
+            </div>
+          </Col>
+        </Row>
+        <Row><Col>
+          <p id="auction-description">{this.state.description}</p>
+        </Col></Row>
+        <Row><Col md={{offset: 3, size: 6}}>
+          <Form onSubmit={this.bid} id="bidForm">
+            <Row>
+              <Col>
+                <FormInput min={0} step={0.000001} showLabel={true} name="bidAmount" label="Amount" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <Button id="bid" color="primary" size="lg">Bid</Button>
+              </Col>
+            </Row>
+          </Form>
+        </Col></Row>
+       </React.Fragment>
     );
   }
 }
+
+
 
 const Underline = () => (<div className="underline"></div>);
 
