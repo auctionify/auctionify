@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import moment from 'moment';
-import 'react-datepicker/dist/react-datepicker.css';
+import InputMoment from 'input-moment';
+import 'input-moment/dist/input-moment.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import {
@@ -17,7 +18,6 @@ import {
   InputGroup,
 } from 'reactstrap';
 import { HashRouter, Route, Link, NavLink, withRouter} from 'react-router-dom'
-import DatePicker from 'react-datepicker';
 
 import {getWeb3} from './web3';
 import AuctionContractor from './contract';
@@ -57,24 +57,81 @@ const FormDescription = (props) => {
   );
 }
 
-const FormDatePicker = props => {
-  const className = `flyingLabel ${(props.showLabel || props.value)?"visible":""}`;
-  return (
-    <InputGroup className="datepicker-parent">
-      <Label className={className} for={props.name}>{props.label}</Label>
-      <DatePicker
-        selected={props.value}
-        onChange={props.onChange}
-        showTimeSelect
-        timeFormat="HH:mm"
-        timeIntervals={15}
-        dateFormat="LLL"
-        timeCaption="time"
-        className="form-control-lg form-control datepicker"
-        minDate={moment().add(1, 'hours')}
-      />
-    </InputGroup>
-  );
+class FormDatePicker extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      moment: this.props.value || moment(),
+      showPicker: false,
+    }
+
+    this.onChange = this.onChange.bind(this);
+    this.handleSave = this.handleSave.bind(this);
+    
+    this.showPicker = this.showPicker.bind(this);
+    this.hidePicker = this.hidePicker.bind(this);
+  }
+
+  onChange(moment) {
+    if (this.props.onChange) this.props.onChange.call(null, this.state.moment);
+    this.setState({ moment });
+  };
+
+  handleSave() {
+    this.setState({
+      showPicker: false,
+    });
+  };
+
+  showPicker(e) {
+    this.setState({
+      showPicker: true,
+    });
+  }
+
+  hidePicker(e) {
+    this.setState({
+      showPicker: false,
+    });
+  }
+
+  value() {
+    return this.state.moment.format('lll');
+  }
+
+  render() {
+    return (
+      <React.Fragment>
+        <InputGroup>
+          <Label className="flyingLabel visible" for={this.props.name}>{this.props.label}</Label>
+          <Input
+            autoComplete="off"
+            onChange={this.props.onChange}
+            value={this.value()}
+            bsSize={this.props.size || "lg"}
+            type="text"
+            name={this.props.name}
+            id={this.props.name}
+            placeholder={this.props.placeholder}
+            onFocus={this.showPicker}
+          />
+          <InputGroupAddon addonType="append"><span className="input-group-text"><i className="fa fa-calendar"></i></span></InputGroupAddon>
+        </InputGroup>
+        <div id="date-picker-container">
+          <InputMoment
+            moment={this.state.moment}
+            onChange={this.onChange}
+            minStep={5}
+            onSave={this.handleSave}
+            id="datepicker"
+            className={this.state.showPicker?'visible':''}
+            prevMonthIcon="fa fa-angle-double-left"
+            nextMonthIcon="fa fa-angle-double-right"
+          />
+        </div>
+      </React.Fragment>
+    );
+  }
 }
 
 class CreateAuction extends Component {
@@ -86,8 +143,9 @@ class CreateAuction extends Component {
       title: '',
       description: '',
       minimumBid: 0.000001,
-      auctionEnd: moment().add(1, 'days'),
+      auctionEnd: moment().add(3, 'days'),
     };
+
     this.setup().then(() => console.log("setup completed"));
     this.onInputChange = this.onInputChange.bind(this);
     this.createAuction = this.createAuction.bind(this);
@@ -105,6 +163,7 @@ class CreateAuction extends Component {
   }
 
   onDateChange(date) {
+    console.log(date.format('llll'));
     this.setState({
       auctionEnd: date
     });
@@ -137,7 +196,7 @@ class CreateAuction extends Component {
     const contractor = new AuctionContractor(window.web3, this.state.account); // window.web3 or this.state.web3
     const address = await contractor.create({
       title: this.state.title,
-      auctionEnd: ""+Math.round(new Date().getTime()/1000+1000000),
+      auctionEnd: ""+Math.round(this.state.auctionEnd.toDate().getTime()/1000),
       beneficiary: this.state.account,
       description: this.state.description,
       minimumBid: '10000000000',
@@ -161,11 +220,15 @@ class CreateAuction extends Component {
           </Col>
         </Row>
         <Row>
-          <Col>
-            <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" placeholder="28 years" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
+          <Col md>
+            <Row><Col>
+              <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
+            </Col></Row>
           </Col>
-          <Col>
-            <FormInput min={0} step={0.000001} showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.minimumBid} />
+          <Col md>
+            <Row><Col>
+              <FormInput min={0} step={0.000001} showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.minimumBid} />
+            </Col></Row>
           </Col>
         </Row>
         <Row>

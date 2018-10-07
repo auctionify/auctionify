@@ -5,11 +5,6 @@ body {
   font-family: 'Montserrat', Arial, sans-serif;
 }
 
-.react-datepicker-popper, .react-datepicker {
-  font-family: 'Montserrat', Arial, sans-serif;
-  text-transform: uppercase;
-}
-
 #main {
   border: solid 3px #474544;
   max-width: 768px;
@@ -118,22 +113,87 @@ button#createAuction:hover {
   color: #EEE;
 }
 
+button#createAuction:focus {
+  outline: 0;
+}
+
 select {
   background: url('https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-ios7-arrow-down-32.png') no-repeat right !important;
 }
-
-.react-datepicker__time-list {
-  padding: 0;
+#date-picker-container {
+  width: 100%;
+  position: relative;
 }
-
-input.datepicker {
+#datepicker {
+  position: absolute;
+  background-color: #f9faf3;
+  z-index: 999;
+  border-radius: 0;
+  display: none;
+  width: inherit;;
+}
+#datepicker.visible {
   display: block;
-  width: 100%;
 }
-.react-datepicker__input-container, .react-datepicker-wrapper {
-  width: 100%;
+#datepicker .options button {
+  background: none;
+  -webkit-appearance: none;
+  border-color: #474544;
+  color: #474544;
+  border-radius: 0;
+  transition: all 0.3s;
+}
+#datepicker button:focus {
+  outline: 0;
+}
+#datepicker .options button.is-active {
+  background: #474544;
+  color: #EEE;
+}
+#datepicker div.toolbar button {
+  border-radius: 0;
+  color: gray;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+#datepicker div.toolbar button:hover {
+  color: black;
+}
+#datepicker .current-date {
+  color: #474544;
+  text-transform: uppercase;
+}
+#datepicker table thead tr td {
+  color: #474544;
+}
+#datepicker table .current-day {
+  color: #474544;
+}
+#datepicker button.btn-save {
+  border-radius: 0;
+  background: #474544;
+  color: #EEE;
+}
+#datepicker .m-calendar tbody td:hover {
+  background: #474544;
+  border-color: black;
+  color: white !important;
 }
 
-.datepicker-parent > div {
-  width: 100%;
+#datepicker .showtime .time{
+  background: #474544;
 }
+#datepicker .sliders .u-slider-time .handle:after {
+  border-color: #474544;
+}
+#datepicker .sliders .u-slider-time .value {
+  background: #474544;
+}
+#datepicker .sliders .time-text,
+#datepicker .showtime .separater{
+  color: #474544;
+  text-transform: uppercase;
+}
+
