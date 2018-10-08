@@ -1,8 +1,6 @@
 import {compiled, ABI} from './config';
 const Promise = require("bluebird");
 
-const delay = async n => new Promise(acc => setTimeout(acc, n));
-
 const getTransactionReceipt = (web3, transactionHash) => {
   return new Promise((acc, rej) => {
     const check = () => {

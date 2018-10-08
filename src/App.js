@@ -9,16 +9,14 @@ import {
   Container,
   Button,
   Form,
-  FormGroup,
   Label,
   Input,
-  FormText,
   Col,
   Row,
   InputGroupAddon,
   InputGroup,
 } from 'reactstrap';
-import { HashRouter, Route, Link, NavLink, withRouter} from 'react-router-dom'
+import { HashRouter, Route, withRouter} from 'react-router-dom'
 
 import {getWeb3} from './web3';
 import {getTransactionReceipt, AuctionContractor} from './contract';
@@ -38,7 +36,7 @@ const FormInput = (props) => {
   let type = props.type;
   let value = props.value;
 
-  if (type == 'eth') {
+  if (type === 'eth') {
     type = 'text';
     value = window.web3.fromWei(props.value).toFixed();
 
@@ -59,12 +57,12 @@ const FormInput = (props) => {
 
     onKeyDown = e => {
       let diff = 0;
-      if (e.keyCode == 38) {
+      if (e.keyCode === 38) {
         diff++;
-      }else if (e.keyCode == 40) {
+      }else if (e.keyCode === 40) {
         diff--;
       }
-      if (diff == 0) return;
+      if (diff === 0) return;
       const valueWei = props.value.add(diff);
       if (valueWei.lessThan(1) || !valueWei.isInt()) return;
 
@@ -310,7 +308,7 @@ const CountDown = props => {
 
 
 const HighestBid = props => {
-  if (!props.bid || props.bid == 0) {
+  if (!props.bid || props.bid.isZero()) {
     return '';
   }
   return (
