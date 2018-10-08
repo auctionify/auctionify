@@ -331,8 +331,10 @@ class ShowAuction extends Component {
       accounts: [],
       account: null,
       now: moment(),
-      bidAmount: new window.web3.toBigNumber(1),
+      description: '',
+      title: '',
       highestBidder: '',
+      bidAmount: new window.web3.toBigNumber(1),
       minimumBid: new window.web3.toBigNumber(1),
       highestBid: new window.web3.toBigNumber(0),
     }
@@ -425,7 +427,9 @@ class ShowAuction extends Component {
           </Col>
         </Row>
         <Row><Col>
-          <p id="auction-description">{this.state.description}</p>
+          <p id="auction-description">{this.state.description.split(/\n/).map((line, key) => {
+            return <Fragment key={key}>{line}<br /></Fragment>;
+          })}</p>
         </Col></Row>
         <Row><Col md={{offset: 3, size: 6}}>
           <Form onSubmit={this.bid} id="bidForm">
