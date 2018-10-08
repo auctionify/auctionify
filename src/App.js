@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import moment from 'moment';
 import InputMoment from 'input-moment';
 import 'input-moment/dist/input-moment.css';
@@ -33,28 +33,29 @@ const FormInput = (props) => {
 
   const className = `flyingLabel ${(props.showLabel || props.value)?"visible":""}`;
 
+  let onChange = props.onChange;
+  let onKeyDown = props.onKeyDown;
+  
+  if (props.type == 'eth') {
+    
+  }
     
   return (
     <InputGroup>
       <Label className={className} for={props.name}>{props.label}</Label>
-      <Input autoComplete="off" min={props.min} max={props.max} step={props.step} onChange={props.onChange} value={props.value} bsSize={props.size || "lg"} type={props.type || "text"} name={props.name} id={props.name} placeholder={props.placeholder}>
+      <Input autoComplete="off"
+        onChange={props.onChange}
+        onKeyDown={props.onKeyDown}
+        value={props.value}
+        bsSize={props.size || "lg"}
+        type={props.type || "text"}
+        name={props.name}
+        id={props.name}
+        placeholder={props.placeholder} >
         {props.children}
       </Input>
       {append}
     </InputGroup>
-  );
-}
-
-const FormDescription = (props) => {
-  return (
-    <FormGroup row>
-      <Label for={props.name} sm={2}></Label>
-      <Col sm={10}>
-        <InputGroup>
-            {props.children}
-        </InputGroup>
-      </Col>
-    </FormGroup>
   );
 }
 
@@ -102,7 +103,7 @@ class FormDatePicker extends Component {
 
   render() {
     return (
-      <React.Fragment>
+      <Fragment>
         <InputGroup>
           <Label className="flyingLabel visible" for={this.props.name}>{this.props.label}</Label>
           <Input
@@ -130,11 +131,26 @@ class FormDatePicker extends Component {
             nextMonthIcon="fa fa-angle-double-right"
           />
         </div>
-      </React.Fragment>
+      </Fragment>
     );
   }
 }
-
+const Auctionify = () => {
+  return (
+    <Fragment>
+      <Row>
+        <Col>
+          <h1 className="brand-title">&bull; Auctionify &bull;</h1>
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          <Underline />
+        </Col>
+      </Row>
+    </Fragment>
+  )
+}
 class CreateAuction extends Component {
   constructor(props) {
     super(props);
@@ -143,14 +159,50 @@ class CreateAuction extends Component {
       accounts: [],
       title: '',
       description: '',
-      minimumBid: 0.000001,
+      minimumBid: new window.web3.toBigNumber(1),
+      minimumBidEth: window.web3.fromWei(1),
       auctionEnd: moment().add(3, 'days'),
     };
 
     this.setup().then(() => console.log("setup completed"));
     this.onInputChange = this.onInputChange.bind(this);
+    this.onInputWeiChange = this.onInputWeiChange.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
     this.createAuction = this.createAuction.bind(this);
     this.onDateChange = this.onDateChange.bind(this);
+  }
+
+  onInputWeiChange({target}) {
+    const stringValue = target.value;
+    const name = target.name;
+    if (isNaN(stringValue)) return;
+    const valueWei = window.web3.toBigNumber(window.web3.toWei(stringValue));
+
+    if (valueWei.lessThan(1) || !valueWei.isInt()) return;
+
+    this.setState({
+      [name]: valueWei,
+      [name+'Eth']: window.web3.fromWei(valueWei).toFixed(),
+    });
+  }
+
+  onKeyDown(e) {
+    let diff = 0;
+    if (e.keyCode == 38) {
+      diff++;
+    }else if (e.keyCode == 40) {
+      diff--;
+    }
+    if (diff == 0) return;
+    const name = e.target.name;
+    const valueWei = this.state[name].add(diff);
+
+    if (valueWei.lessThan(1) || !valueWei.isInt()) return;
+
+    this.setState({
+      [name]: valueWei,
+      [name+'Eth']: window.web3.fromWei(valueWei).toFixed(),
+    });
   }
 
   onInputChange({target}) {
@@ -195,42 +247,45 @@ class CreateAuction extends Component {
 
   render() {
     return (
-      <Form onSubmit={this.createAuction} id="auctionForm">
-        <Row>
-          <Col>
-            <FormInput name="title" label="Title" placeholder="Auction Title" onChange={this.onInputChange} value={this.state.title} />
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            <FormInput name="description" label="Description" placeholder="Auction Description" onChange={this.onInputChange} value={this.state.description} />
-          </Col>
-        </Row>
-        <Row>
-          <Col md>
-            <Row><Col>
-              <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
-            </Col></Row>
-          </Col>
-          <Col md>
-            <Row><Col>
-              <FormInput min={0} step={0.000001} showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.minimumBid} />
-            </Col></Row>
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            <FormInput showLabel={true} name="account" label="Account" type="select" onChange={this.onInputChange} value={this.state.account}>
-              {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
-            </FormInput>
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            <Button id="createAuction" color="primary" size="lg">Create</Button>
-          </Col>
-        </Row>
-      </Form>
+      <Fragment>
+        <Auctionify />
+        <Form onSubmit={this.createAuction} id="auctionForm">
+          <Row>
+            <Col>
+              <FormInput showLabel={true} name="title" label="Title" placeholder="something to sell ..." onChange={this.onInputChange} value={this.state.title} />
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <FormInput showLabel={true} name="description" label="Description" placeholder={"describe\nthe auction ..."} type="textarea" onChange={this.onInputChange} value={this.state.description} />
+            </Col>
+          </Row>
+          <Row>
+            <Col md>
+              <Row><Col>
+                <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
+              </Col></Row>
+            </Col>
+            <Col md>
+              <Row><Col>
+                <FormInput showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" onChange={this.onInputWeiChange} value={this.state.minimumBidEth} onKeyDown={this.onKeyDown} />
+              </Col></Row>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <FormInput showLabel={true} name="account" label="Account" type="select" onChange={this.onInputChange} value={this.state.account}>
+                {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
+              </FormInput>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Button id="createAuction" color="primary" size="lg">Create</Button>
+            </Col>
+          </Row>
+        </Form>
+      </Fragment>
     );
   }
 }
@@ -239,17 +294,30 @@ class CreateAuction extends Component {
 const CountDown = props => {
   if (!props.to || !props.now) return <div></div>;
   const duration = moment.duration(props.to-props.now);
-
+  console.log(duration)
   const pad = n => (""+n).padStart(2, '0');
   return (
     <div className="countdown">
-      <span className="time">{pad(duration.days())}</span>
+      <span className="time">{pad(Math.floor(duration.asDays()))}</span>
       <span className="separater">:</span>
       <span className="time">{pad(duration.hours())}</span>
       <span className="separater">:</span>
       <span className="time">{pad(duration.minutes())}</span>
       <span className="separater">:</span>
       <span className="time">{pad(duration.seconds())}</span>
+    </div>
+  );
+}
+
+
+const HighestBid = props => {
+  if (!props.bid || props.bid == 0) {
+    return '';
+  }
+  return (
+    <div className="highest-bid">
+      <h3>{props.bid} ETH</h3>
+      <small>highest bid</small>
     </div>
   );
 }
@@ -346,7 +414,7 @@ class ShowAuction extends Component {
 
   render() {
     return (
-      <React.Fragment>
+      <Fragment>
         <Row><Col>
           <h1 id="auction-title">{this.state.title}</h1>
         </Col></Row>
@@ -355,10 +423,7 @@ class ShowAuction extends Component {
         </Col></Row>
         <Row>
           <Col md={{offset: 3, size: 6}} className="text-center">
-            <div  className="highest-bid">
-              <h3 className="emph">{this.state.highestBid} ETH</h3>
-              <small>highest bid</small>
-            </div>
+            <HighestBid bid={this.state.highestBid} />
           </Col>
         </Row>
         <Row><Col>
@@ -368,7 +433,7 @@ class ShowAuction extends Component {
           <Form onSubmit={this.bid} id="bidForm">
             <Row>
               <Col>
-                <FormInput min={0} step={0.000001} showLabel={true} name="bidAmount" label="Amount" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
+                <FormInput showLabel={true} name="bidAmount" label="Amount" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
               </Col>
             </Row>
             <Row>
@@ -378,7 +443,7 @@ class ShowAuction extends Component {
             </Row>
           </Form>
         </Col></Row>
-       </React.Fragment>
+       </Fragment>
     );
   }
 }
@@ -392,16 +457,6 @@ class App extends Component {
     return (
       <HashRouter>
         <Container id="main">
-          <Row>
-            <Col>
-              <h1 className="brand-title">&bull; Auctionify &bull;</h1>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Underline />
-            </Col>
-          </Row>
           <Route path="/" exact={true} component={withRouter(CreateAuction)}/>
           <Route path="/auction/:address" component={withRouter(ShowAuction)}/>
         </Container>

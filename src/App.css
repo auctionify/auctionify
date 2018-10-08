@@ -131,7 +131,11 @@ select {
   background: url('https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-ios7-arrow-down-32.png') no-repeat right !important;
 }
 
-
+textarea {
+  margin-top: 10px;
+  min-height: 100px !important;
+  padding-bottom: 10px !important;
+}
 .row.inset {
   margin: 0px -60px;
   padding: 40px;
@@ -144,6 +148,7 @@ select {
   text-align: center;
   font-weight: 700;
   font-size: 3em;
+  margin-top: 20px;
 }
 div.countdown {
   text-align: center;
