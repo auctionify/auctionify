@@ -125,6 +125,7 @@ button#createAuction:hover, button#bid:hover {
 
 button#createAuction:focus, button#bid:focus {
   outline: 0;
+  box-shadow: none !important;
 }
 
 select {
