@@ -15,11 +15,6 @@ body {
 #main #content {
   padding: 0px 60px 60px 60px;
 }
-@media (max-width: 768px) {
-  #main #content{
-    padding: 0px 20px 20px 20px;
-  }
-}
 
 h1.brand-title {
   color: #474544;
@@ -31,6 +26,19 @@ h1.brand-title {
   margin: 35px;
   white-space: nowrap;
 }
+
+@media (max-width: 768px) {
+  #main {
+    margin: 1px auto;
+  }
+  #main #content{
+    padding: 0px 10px 10px 10px;
+  }
+  h1.brand-title {
+    margin: 15px 0px;
+  }
+}
+
 
 .underline {
   border-bottom: solid 2px #474544;
