@@ -16,28 +16,30 @@ const getTransactionReceipt = (web3, transactionHash) => {
 }
 
 const AuctionContractor = function(web3, from, gas = 3000000) {
-  const contract = web3.eth.contract(ABI);
-
-
+  const contract = new web3.eth.Contract(ABI);
   return {
     create: options => new Promise((acc, rej) => {
-      contract.new(
+      const args = [
         options.title,
         options.auctionEnd,
         options.beneficiary,
         options.description,
-        options.minimumBid,
-        {
-          gas,
-          from,
-          data: compiled,
-        }, (err, deployHash) => {
-          if (err) return rej(err);
-          acc(deployHash.transactionHash);
-        });
+        options.minimumBid.toString(),
+      ];
+      console.log("Deploy contract", args);
+      contract.deploy({
+        data: compiled,
+        arguments: args,
+      }).send({
+        from,
+        gas,
+      }, (err, transactionHash) => {
+        if (err) return rej(err);
+        acc(transactionHash);
+      });
     }),
     at: address => {
-      return Promise.promisifyAll(contract.at(address));
+      return new web3.eth.Contract(ABI, address);
     }
   }
 }
