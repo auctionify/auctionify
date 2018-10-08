@@ -195,7 +195,7 @@ class CreateAuction extends Component {
       title: '',
       description: '',
       minimumBid: new window.web3.toBigNumber(1),
-      auctionEnd: moment().add(3, 'days'),
+      auctionEnd: moment().add(3, 'days').startOf('day'),
     };
 
     this.setup().then(() => console.log("setup completed"));
@@ -213,11 +213,8 @@ class CreateAuction extends Component {
     });
   }
 
-  onDateChange(date) {
-    console.log(date.format('llll'));
-    this.setState({
-      auctionEnd: date
-    });
+  onDateChange(auctionEnd) {
+    this.setState({ auctionEnd });
   }
 
   async setup() {
@@ -235,7 +232,7 @@ class CreateAuction extends Component {
     const contractor = new AuctionContractor(window.web3, this.state.account); // window.web3 or this.state.web3
     const address = await contractor.create({
       title: this.state.title,
-      auctionEnd: ""+Math.round(this.state.auctionEnd.toDate().getTime()/1000),
+      auctionEnd: this.state.auctionEnd.unix().toString(),
       beneficiary: this.state.account,
       description: this.state.description,
       minimumBid: this.state.minimumBid,
@@ -380,7 +377,7 @@ class ShowAuction extends Component {
       this.setState({
         highestBidder,
         highestBid,
-        bidAmount: window.web3.max(this.state.bidAmount, highestBid.add(1)),
+        bidAmount: window.web3.BigNumber.max(this.state.bidAmount, highestBid.add(1)),
       });
     });
 
