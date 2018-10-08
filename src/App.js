@@ -190,7 +190,7 @@ const Auctionify = () => {
       <Row>
         <Col>
           <h1 className="brand-title">&bull; Auctionify &bull;</h1>
-          <small id="version">v0.0.1</small>
+          <small id="version">v0.0.2</small>
         </Col>
       </Row>
       <Row>
@@ -204,7 +204,6 @@ const Auctionify = () => {
 class CreateAuction extends Component {
   constructor(props) {
     super(props);
-
     this.state = {
       loading: false,
       loadingText: '',
@@ -250,6 +249,7 @@ class CreateAuction extends Component {
       loading: true,
       loadingText: 'Deploying Contract'
     });
+
     let transactionHash;
     try {
       const contractor = new AuctionContractor(web3, this.state.account); // window.web3 or this.state.web3
@@ -261,7 +261,6 @@ class CreateAuction extends Component {
         minimumBid: this.state.minimumBid,
       });
     } catch (e) {
-      console.log(e);
       this.setState({
         loadingText: 'Denied!',
       });
@@ -424,8 +423,8 @@ class ShowAuction extends Component {
       title: await this.contract.methods.auctionTitle().call(),
       description: await this.contract.methods.auctionDescription().call(),
       highestBidder: await this.contract.methods.highestBidder().call(),
-      minimumBid: web3.utils.toBN(await this.contract.methods.minimumBid().call()),
-      highestBid: web3.utils.toBN(await this.contract.methods.highestBid().call()),
+      minimumBid: new BigNumber(await this.contract.methods.minimumBid().call()),
+      highestBid: new BigNumber(await this.contract.methods.highestBid().call()),
     }
 
     const deadline = await this.contract.methods.auctionEnd().call();
@@ -493,7 +492,7 @@ class ShowAuction extends Component {
   }
 
   minimumAcceptableBid() {
-    return BigNumber.max(this.state.minimumBid, this.state.highestBid.add(web3.utils.toBN(WEI_STEP)))
+    return BigNumber.max(this.state.minimumBid, this.state.highestBid.add(WEI_STEP))
   }
 
   render() {
@@ -562,6 +561,7 @@ class App extends Component {
     window.BigNumber = BigNumber;
 
     WEI_STEP = new BigNumber(WEI_STEP);
+
     this.setState({
       loaded: true,
     });
