@@ -81,7 +81,7 @@ const FormInput = (props) => {
       });
     }
   }
-    
+
   return (
     <InputGroup>
       <Label className={className} for={props.name}>{props.label}</Label>
@@ -339,13 +339,31 @@ const CountDown = props => {
   const pad = n => (""+n).padStart(2, '0');
   return (
     <div className="countdown">
-      <span className="time">{pad(Math.floor(duration.asDays()))}</span>
-      <span className="separater">:</span>
-      <span className="time">{pad(duration.hours())}</span>
-      <span className="separater">:</span>
-      <span className="time">{pad(duration.minutes())}</span>
-      <span className="separater">:</span>
-      <span className="time">{pad(duration.seconds())}</span>
+      <div className="section">
+        <span className="time">{pad(Math.floor(duration.asDays()))}</span><br />
+        <span className="label">days</span>
+      </div>
+
+      <div className="section"><span className="separater">:</span><br />&nbsp;</div>
+      
+      <div className="section">
+        <span className="time">{pad(duration.hours())}</span><br />
+        <span className="label">hours</span>
+      </div>
+
+      <div className="section"><span className="separater">:</span><br />&nbsp;</div>
+      
+      <div className="section">
+        <span className="time">{pad(duration.minutes())}</span><br />
+        <span className="label">minutes</span>
+      </div>
+
+      <div className="section"><span className="separater">:</span><br />&nbsp;</div>
+      
+      <div className="section">
+        <span className="time">{pad(duration.seconds())}</span><br />
+        <span className="label">seconds</span>
+      </div>
     </div>
   );
 }
