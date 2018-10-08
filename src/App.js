@@ -426,7 +426,6 @@ class ShowAuction extends Component {
       minimumBid: web3.utils.toBN(await this.contract.methods.minimumBid().call()),
       highestBid: web3.utils.toBN(await this.contract.methods.highestBid().call()),
     }
-    console.log(detail);
 
     const deadline = await this.contract.methods.auctionEnd().call();
     detail.auctionEnd = moment(deadline*1000);
@@ -437,21 +436,24 @@ class ShowAuction extends Component {
       account: accounts[0],
       ...detail,
       loading: false,
-      bidAmount: web3.utils.BN.max(detail.minimumBid, detail.highestBid.add(web3.utils.toBN(WEI_STEP))),
+      bidAmount: BigNumber.max(detail.minimumBid, detail.highestBid.add(WEI_STEP)),
     });
 
 
-    // this.contract.HighestBidIncreased().watch((err, result) => {
-    //   if (err) return;
-    //   const highestBidder = result.args.bidder;
-    //   const highestBid = result.args.amount;
+    // this.contract.events.HighestBidIncreased(console.log).on('data', event => {
+    //   console.log("data", event);
+    // }).on('changed', event => {
+    //   console.log("changed", event);
+    // }).on('error', console.error)
+    // //   const highestBidder = result.args.bidder;
+    // //   const highestBid = result.args.amount;
 
-    //   this.setState({
-    //     highestBidder,
-    //     highestBid,
-    //     bidAmount: web3.utils.BN.max(this.state.bidAmount, highestBid.add(WEI_STEP)),
-    //   });
-    // });
+    // //   this.setState({
+    // //     highestBidder,
+    // //     highestBid,
+    // //     bidAmount: web3.utils.BN.max(this.state.bidAmount, highestBid.add(WEI_STEP)),
+    // //   });
+    // // });
 
     setInterval(() => {
       this.setState({
@@ -478,26 +480,15 @@ class ShowAuction extends Component {
     let {transactionHash} = await this.contract.methods.bid().send({
       from: this.state.account,
       value: this.state.bidAmount,
+    }).on('transactionHash', hash => {
+      this.setState({
+        loadingText: `Confirming ${hash.substr(0, 10)}`,
+      });
     });
     console.log(transactionHash);
     this.setState({
       loading: false
     });
-    // , async (err, transactionHash) => {
-    //   if (err) {
-    //     this.setState({
-    //       loading: false,
-    //     });
-    //     return;
-    //   }
-    //   this.setState({
-    //     loadingText: `Confirming ${transactionHash.substr(0, 10)}`,
-    //   });
-    //   await getTransactionReceipt(window.web3, transactionHash);
-    //   this.setState({
-    //     loading: false,
-    //   });
-    // });
   }
 
   minimumAcceptableBid() {
