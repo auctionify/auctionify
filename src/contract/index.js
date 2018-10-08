@@ -31,11 +31,9 @@ const AuctionContractor = function(web3, from, gas = 3000000) {
           gas,
           from,
           data: compiled,
-        },
-        async (err, deployHash) => {
+        }, (err, deployHash) => {
           if (err) return rej(err);
-          const receipt = await getTransactionReceipt(web3, deployHash.transactionHash);
-          return acc(receipt.contractAddress);
+          acc(deployHash.transactionHash);
         });
     }),
     at: address => {

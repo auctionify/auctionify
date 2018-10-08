@@ -1,6 +1,8 @@
 import React, { Component, Fragment } from 'react';
 import moment from 'moment';
 import InputMoment from 'input-moment';
+import LoadingOverlay from 'react-loading-overlay';
+
 import 'input-moment/dist/input-moment.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './datepicker.css'
@@ -22,6 +24,7 @@ import {getWeb3} from './web3';
 import {getTransactionReceipt, AuctionContractor} from './contract';
 import './App.css';
 
+const WEI_STEP = '100000000000';
 
 const FormInput = (props) => {
   let append;
@@ -35,6 +38,8 @@ const FormInput = (props) => {
   let onKeyDown = props.onKeyDown;
   let type = props.type;
   let value = props.value;
+
+  let step = props.step || WEI_STEP;
 
   if (type === 'eth') {
     type = 'text';
@@ -63,7 +68,7 @@ const FormInput = (props) => {
         diff--;
       }
       if (diff === 0) return;
-      const valueWei = props.value.add(diff);
+      const valueWei = props.value.add(diff*step);
       if (valueWei.lessThan(1) || !valueWei.isInt()) return;
 
       props.onChange({
@@ -191,10 +196,12 @@ class CreateAuction extends Component {
     super(props);
 
     this.state = {
+      loading: false,
+      loadingText: '',
       accounts: [],
       title: '',
       description: '',
-      minimumBid: new window.web3.toBigNumber(1),
+      minimumBid: new window.web3.toBigNumber(WEI_STEP),
       auctionEnd: moment().add(3, 'days').startOf('day'),
     };
 
@@ -229,58 +236,96 @@ class CreateAuction extends Component {
 
   async createAuction(e) {
     e.preventDefault();
-    const contractor = new AuctionContractor(window.web3, this.state.account); // window.web3 or this.state.web3
-    const address = await contractor.create({
-      title: this.state.title,
-      auctionEnd: this.state.auctionEnd.unix().toString(),
-      beneficiary: this.state.account,
-      description: this.state.description,
-      minimumBid: this.state.minimumBid,
+    
+    this.setState({
+      loading: true,
+      loadingText: 'Deploying Contract'
     });
-    this.props.history.push(`/auction/${address}`);
+    let transactionHash;
+    try {
+      const contractor = new AuctionContractor(window.web3, this.state.account); // window.web3 or this.state.web3
+       transactionHash = await contractor.create({
+        title: this.state.title,
+        auctionEnd: this.state.auctionEnd.unix().toString(),
+        beneficiary: this.state.account,
+        description: this.state.description,
+        minimumBid: this.state.minimumBid,
+      });
+    } catch (e) {
+      this.setState({
+        loadingText: 'Denied!',
+      });
+      setTimeout(() => {
+        this.setState({
+          loading: false,
+        });
+      }, 1000);
+      return;
+    }
+    this.setState({
+      loadingText: `Confirming ${transactionHash.substr(0, 10)}`,
+    });
+    const receipt = await getTransactionReceipt(window.web3, transactionHash);
+    
+    this.setState({
+      loadingText: 'Confirmed!'
+    });
+
+    setTimeout(() => {
+      this.setState({
+        loading: false,
+      });
+      this.props.history.push(`/auction/${receipt.contractAddress}`);
+    }, 2000);
   }
 
   render() {
     return (
-      <Fragment>
-        <Auctionify />
-        <Form onSubmit={this.createAuction} id="auctionForm">
-          <Row>
-            <Col>
-              <FormInput showLabel={true} name="title" label="Title" placeholder="something to sell ..." onChange={this.onInputChange} value={this.state.title} />
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <FormInput showLabel={true} name="description" label="Description" placeholder={"describe\nthe auction ..."} type="textarea" onChange={this.onInputChange} value={this.state.description} />
-            </Col>
-          </Row>
-          <Row>
-            <Col md>
-              <Row><Col>
-                <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
-              </Col></Row>
-            </Col>
-            <Col md>
-              <Row><Col>
-                <FormInput showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" type="eth" onChange={this.onInputChange} value={this.state.minimumBid}/>
-              </Col></Row>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <FormInput showLabel={true} name="account" label="Account" type="select" onChange={this.onInputChange} value={this.state.account}>
-                {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
-              </FormInput>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Button id="createAuction" color="primary" size="lg">Create</Button>
-            </Col>
-          </Row>
-        </Form>
-      </Fragment>
+      <LoadingOverlay
+        active={this.state.loading}
+        spinner
+        text={this.state.loadingText}
+      >
+        <div id="content">
+          <Auctionify />
+          <Form onSubmit={this.createAuction} id="auctionForm">
+            <Row>
+              <Col>
+                <FormInput showLabel={true} name="title" label="Title" placeholder="something to sell ..." onChange={this.onInputChange} value={this.state.title} />
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <FormInput showLabel={true} name="description" label="Description" placeholder={"describe\nthe auction ..."} type="textarea" onChange={this.onInputChange} value={this.state.description} />
+              </Col>
+            </Row>
+            <Row>
+              <Col md>
+                <Row><Col>
+                  <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
+                </Col></Row>
+              </Col>
+              <Col md>
+                <Row><Col>
+                  <FormInput showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" type="eth" onChange={this.onInputChange} value={this.state.minimumBid}/>
+                </Col></Row>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <FormInput showLabel={true} name="account" label="Account" type="select" onChange={this.onInputChange} value={this.state.account}>
+                  {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
+                </FormInput>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <Button id="createAuction" color="primary" size="lg">Create</Button>
+              </Col>
+            </Row>
+          </Form>
+        </div>
+      </LoadingOverlay>
     );
   }
 }
@@ -311,6 +356,7 @@ const HighestBid = props => {
   return (
     <div className="highest-bid">
       <h3>{window.web3.fromWei(props.bid).toFixed()} ETH</h3>
+      <span>{props.bidder.substr(0, 10)}</span>
       <small>highest bid</small>
     </div>
   );
@@ -319,9 +365,9 @@ const HighestBid = props => {
 class ShowAuction extends Component {
   constructor(props) {
     super(props);
-    
     this.state = {
       loading: true,
+      loadingText: 'loading auction',
       contract: {},
       accounts: [],
       account: null,
@@ -364,7 +410,7 @@ class ShowAuction extends Component {
       account: accounts[0],
       ...detail,
       loading: false,
-      bidAmount: window.web3.BigNumber.max(detail.minimumBid, detail.highestBid.add(1)),
+      bidAmount: window.web3.BigNumber.max(detail.minimumBid, detail.highestBid.add(WEI_STEP)),
     });
 
     window.contract = this.contract;
@@ -377,7 +423,7 @@ class ShowAuction extends Component {
       this.setState({
         highestBidder,
         highestBid,
-        bidAmount: window.web3.BigNumber.max(this.state.bidAmount, highestBid.add(1)),
+        bidAmount: window.web3.BigNumber.max(this.state.bidAmount, highestBid.add(WEI_STEP)),
       });
     });
 
@@ -399,48 +445,69 @@ class ShowAuction extends Component {
 
   bid(e) {
     e.preventDefault();
+    this.setState({
+      loading: true,
+      loadingText: 'Sending Transaction',
+    });
     this.contract.bid.sendTransaction({
       value: this.state.bidAmount,
     }, async (err, transactionHash) => {
-      if (err) throw err;
-      console.log(await getTransactionReceipt(window.web3, transactionHash));
+      if (err) {
+        this.setState({
+          loading: false,
+        });
+        return;
+      }
+      this.setState({
+        loadingText: `Confirming ${transactionHash.substr(0, 10)}`,
+      });
+      await getTransactionReceipt(window.web3, transactionHash);
+      this.setState({
+        loading: false,
+      });
     });
   }
 
   render() {
     return (
-      <Fragment>
-        <Row><Col>
-          <h1 id="auction-title">{this.state.title}</h1>
-        </Col></Row>
-        <Row><Col>
-          <CountDown now={this.state.now} to={this.state.auctionEnd} />
-        </Col></Row>
-        <Row>
-          <Col className="text-center">
-            <HighestBid bid={this.state.highestBid} />
-          </Col>
-        </Row>
-        <Row><Col>
-          <p id="auction-description">{this.state.description.split(/\n/).map((line, key) => {
-            return <Fragment key={key}>{line}<br /></Fragment>;
-          })}</p>
-        </Col></Row>
-        <Row><Col md={{offset: 3, size: 6}}>
-          <Form onSubmit={this.bid} id="bidForm">
-            <Row>
-              <Col>
-                <FormInput showLabel={true} name="bidAmount" label="Amount" placeholder="0.01" type="eth" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Button id="bid" color="primary" size="lg">Bid</Button>
-              </Col>
-            </Row>
-          </Form>
-        </Col></Row>
-       </Fragment>
+      <LoadingOverlay
+        active={this.state.loading}
+        spinner
+        text={this.state.loadingText}
+      >
+        <div id="content">
+          <Row><Col>
+            <h1 id="auction-title">{this.state.title}</h1>
+          </Col></Row>
+          <Row><Col>
+            <CountDown now={this.state.now} to={this.state.auctionEnd} />
+          </Col></Row>
+          <Row>
+            <Col className="text-center">
+              <HighestBid bid={this.state.highestBid} bidder={this.state.highestBidder} />
+            </Col>
+          </Row>
+          <Row><Col>
+            <p id="auction-description">{this.state.description.split(/\n/).map((line, key) => {
+              return <Fragment key={key}>{line}<br /></Fragment>;
+            })}</p>
+          </Col></Row>
+          <Row><Col md={{offset: 3, size: 6}}>
+            <Form onSubmit={this.bid} id="bidForm">
+              <Row>
+                <Col>
+                  <FormInput showLabel={true} name="bidAmount" label="Amount" placeholder="0.01" type="eth" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <Button id="bid" color="primary" size="lg">Bid</Button>
+                </Col>
+              </Row>
+            </Form>
+          </Col></Row>
+        </div>
+      </LoadingOverlay>
     );
   }
 }
@@ -450,12 +517,35 @@ class ShowAuction extends Component {
 const Underline = () => (<div className="underline"></div>);
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      busy: false
+    };
+    this.busy = this.busy.bind(this);
+  }
+
+  busy(val) {
+    console.log(val);
+    this.setState({
+      busy: !!val
+    });
+  }
+
+  withBusy(Component) {
+    return (props) => {
+      return <Component {...props} busy={this.busy} />
+    }
+  }
+
+
   render() {
+    
     return (
       <HashRouter>
         <Container id="main">
-          <Route path="/" exact={true} component={withRouter(CreateAuction)}/>
-          <Route path="/auction/:address" component={withRouter(ShowAuction)}/>
+          <Route path="/" exact={true} component={this.withBusy(withRouter(CreateAuction))} />
+          <Route path="/auction/:address" component={this.withBusy(withRouter(ShowAuction))} />
         </Container>
       </HashRouter>
     );
