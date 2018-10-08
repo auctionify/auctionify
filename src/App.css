@@ -27,6 +27,13 @@ h1.brand-title {
   white-space: nowrap;
 }
 
+small#version {
+  display: block;
+  margin: -30px auto 10px auto;
+  width: 100px;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   #main {
     margin: 1px auto;
@@ -35,7 +42,7 @@ h1.brand-title {
     padding: 0px 10px 10px 10px;
   }
   h1.brand-title {
-    margin: 15px 0px;
+    margin: 15px 0px 30px 0px;
   }
 }
 
