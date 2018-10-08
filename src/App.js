@@ -35,20 +35,57 @@ const FormInput = (props) => {
 
   let onChange = props.onChange;
   let onKeyDown = props.onKeyDown;
-  
-  if (props.type == 'eth') {
-    
+  let type = props.type;
+  let value = props.value;
+
+  if (type == 'eth') {
+    type = 'text';
+    value = window.web3.fromWei(props.value).toFixed();
+
+    onChange = e => {
+      const stringValue = e.target.value;
+      if (isNaN(stringValue)) return;
+      const valueWei = window.web3.toBigNumber(window.web3.toWei(stringValue));
+
+      if (valueWei.lessThan(1) || !valueWei.isInt()) return;
+
+      props.onChange({
+        target: {
+          name: props.name,
+          value: valueWei,
+        }
+      });
+    }
+
+    onKeyDown = e => {
+      let diff = 0;
+      if (e.keyCode == 38) {
+        diff++;
+      }else if (e.keyCode == 40) {
+        diff--;
+      }
+      if (diff == 0) return;
+      const valueWei = props.value.add(diff);
+      if (valueWei.lessThan(1) || !valueWei.isInt()) return;
+
+      props.onChange({
+        target: {
+          name: props.name,
+          value: valueWei,
+        }
+      });
+    }
   }
     
   return (
     <InputGroup>
       <Label className={className} for={props.name}>{props.label}</Label>
       <Input autoComplete="off"
-        onChange={props.onChange}
-        onKeyDown={props.onKeyDown}
-        value={props.value}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+        value={value}
         bsSize={props.size || "lg"}
-        type={props.type || "text"}
+        type={type || "text"}
         name={props.name}
         id={props.name}
         placeholder={props.placeholder} >
@@ -160,49 +197,13 @@ class CreateAuction extends Component {
       title: '',
       description: '',
       minimumBid: new window.web3.toBigNumber(1),
-      minimumBidEth: window.web3.fromWei(1),
       auctionEnd: moment().add(3, 'days'),
     };
 
     this.setup().then(() => console.log("setup completed"));
     this.onInputChange = this.onInputChange.bind(this);
-    this.onInputWeiChange = this.onInputWeiChange.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
     this.createAuction = this.createAuction.bind(this);
     this.onDateChange = this.onDateChange.bind(this);
-  }
-
-  onInputWeiChange({target}) {
-    const stringValue = target.value;
-    const name = target.name;
-    if (isNaN(stringValue)) return;
-    const valueWei = window.web3.toBigNumber(window.web3.toWei(stringValue));
-
-    if (valueWei.lessThan(1) || !valueWei.isInt()) return;
-
-    this.setState({
-      [name]: valueWei,
-      [name+'Eth']: window.web3.fromWei(valueWei).toFixed(),
-    });
-  }
-
-  onKeyDown(e) {
-    let diff = 0;
-    if (e.keyCode == 38) {
-      diff++;
-    }else if (e.keyCode == 40) {
-      diff--;
-    }
-    if (diff == 0) return;
-    const name = e.target.name;
-    const valueWei = this.state[name].add(diff);
-
-    if (valueWei.lessThan(1) || !valueWei.isInt()) return;
-
-    this.setState({
-      [name]: valueWei,
-      [name+'Eth']: window.web3.fromWei(valueWei).toFixed(),
-    });
   }
 
   onInputChange({target}) {
@@ -239,8 +240,7 @@ class CreateAuction extends Component {
       auctionEnd: ""+Math.round(this.state.auctionEnd.toDate().getTime()/1000),
       beneficiary: this.state.account,
       description: this.state.description,
-      minimumBid: '10000000000',
-      // minimumBid: this.state.minimumBid,
+      minimumBid: this.state.minimumBid,
     });
     this.props.history.push(`/auction/${address}`);
   }
@@ -268,7 +268,7 @@ class CreateAuction extends Component {
             </Col>
             <Col md>
               <Row><Col>
-                <FormInput showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" onChange={this.onInputWeiChange} value={this.state.minimumBidEth} onKeyDown={this.onKeyDown} />
+                <FormInput showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" type="eth" onChange={this.onInputChange} value={this.state.minimumBid}/>
               </Col></Row>
             </Col>
           </Row>
@@ -294,7 +294,6 @@ class CreateAuction extends Component {
 const CountDown = props => {
   if (!props.to || !props.now) return <div></div>;
   const duration = moment.duration(props.to-props.now);
-  console.log(duration)
   const pad = n => (""+n).padStart(2, '0');
   return (
     <div className="countdown">
@@ -316,7 +315,7 @@ const HighestBid = props => {
   }
   return (
     <div className="highest-bid">
-      <h3>{props.bid} ETH</h3>
+      <h3>{window.web3.fromWei(props.bid).toFixed()} ETH</h3>
       <small>highest bid</small>
     </div>
   );
@@ -332,7 +331,10 @@ class ShowAuction extends Component {
       accounts: [],
       account: null,
       now: moment(),
-      bidAmount: 0,
+      bidAmount: new window.web3.toBigNumber(1),
+      highestBidder: '',
+      minimumBid: new window.web3.toBigNumber(1),
+      highestBid: new window.web3.toBigNumber(0),
     }
 
     this.onInputChange = this.onInputChange.bind(this);
@@ -351,17 +353,13 @@ class ShowAuction extends Component {
       title: await this.contract.auctionTitleAsync(),
       description: await this.contract.auctionDescriptionAsync(),
       highestBidder: await this.contract.highestBidderAsync(),
-      minimumBid: await this.contract.minimumBidAsync(),
+      minimumBid: window.web3.toBigNumber(await this.contract.minimumBidAsync()),
+      highestBid: window.web3.toBigNumber(await this.contract.highestBidAsync()),
     }
+    console.log(detail);
 
     const deadline = await this.contract.auctionEndAsync();
     detail.auctionEnd = moment(deadline.toFixed()*1000);
-
-    const minimumBid = await this.contract.minimumBidAsync();
-    detail.minimumBid = window.web3.fromWei(minimumBid).toFixed();
-
-    const highestBid = await this.contract.highestBidAsync();
-    detail.highestBid = window.web3.fromWei(highestBid).toFixed();
 
     this.setState({
       web3,
@@ -369,20 +367,20 @@ class ShowAuction extends Component {
       account: accounts[0],
       ...detail,
       loading: false,
-      bidAmount: Math.max(detail.highestBid, detail.highestBid)
+      bidAmount: window.web3.BigNumber.max(detail.minimumBid, detail.highestBid.add(1)),
     });
 
-    console.log(detail);
     window.contract = this.contract;
 
     this.contract.HighestBidIncreased().watch((err, result) => {
       if (err) return;
       const highestBidder = result.args.bidder;
-      const highestBid = window.web3.fromWei(result.args.amount).toFixed();
+      const highestBid = result.args.amount;
 
       this.setState({
         highestBidder,
         highestBid,
+        bidAmount: window.web3.max(this.state.bidAmount, highestBid.add(1)),
       });
     });
 
@@ -405,7 +403,7 @@ class ShowAuction extends Component {
   bid(e) {
     e.preventDefault();
     this.contract.bid.sendTransaction({
-      value: window.web3.toWei(this.state.bidAmount, 'ether')
+      value: this.state.bidAmount,
     }, async (err, transactionHash) => {
       if (err) throw err;
       console.log(await getTransactionReceipt(window.web3, transactionHash));
@@ -422,7 +420,7 @@ class ShowAuction extends Component {
           <CountDown now={this.state.now} to={this.state.auctionEnd} />
         </Col></Row>
         <Row>
-          <Col md={{offset: 3, size: 6}} className="text-center">
+          <Col className="text-center">
             <HighestBid bid={this.state.highestBid} />
           </Col>
         </Row>
@@ -433,7 +431,7 @@ class ShowAuction extends Component {
           <Form onSubmit={this.bid} id="bidForm">
             <Row>
               <Col>
-                <FormInput showLabel={true} name="bidAmount" label="Amount" placeholder="0.01" type="number" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
+                <FormInput showLabel={true} name="bidAmount" label="Amount" placeholder="0.01" type="eth" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
               </Col>
             </Row>
             <Row>
