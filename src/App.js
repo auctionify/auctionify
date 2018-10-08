@@ -40,6 +40,7 @@ const FormInput = (props) => {
   let value = props.value;
 
   let step = props.step || WEI_STEP;
+  let min = props.min || 0;
 
   if (type === 'eth') {
     type = 'text';
@@ -51,7 +52,7 @@ const FormInput = (props) => {
       const valueWei = window.web3.toBigNumber(window.web3.toWei(stringValue));
 
       if (valueWei.lessThan(1) || !valueWei.isInt()) return;
-
+      if (valueWei.lessThan(min)) return;
       props.onChange({
         target: {
           name: props.name,
@@ -71,6 +72,7 @@ const FormInput = (props) => {
       const valueWei = props.value.add(diff*step);
       if (valueWei.lessThan(1) || !valueWei.isInt()) return;
 
+      if (valueWei.lessThan(min)) return;
       props.onChange({
         target: {
           name: props.name,
@@ -307,7 +309,7 @@ class CreateAuction extends Component {
               </Col>
               <Col md>
                 <Row><Col>
-                  <FormInput showLabel={true} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" type="eth" onChange={this.onInputChange} value={this.state.minimumBid}/>
+                  <FormInput showLabel={true} min={WEI_STEP} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" type="eth" onChange={this.onInputChange} value={this.state.minimumBid}/>
                 </Col></Row>
               </Col>
             </Row>
@@ -468,6 +470,10 @@ class ShowAuction extends Component {
     });
   }
 
+  minimumAcceptableBid() {
+    return window.web3.BigNumber.max(this.state.minimumBid, this.state.highestBid.add(WEI_STEP))
+  }
+
   render() {
     return (
       <LoadingOverlay
@@ -496,7 +502,7 @@ class ShowAuction extends Component {
             <Form onSubmit={this.bid} id="bidForm">
               <Row>
                 <Col>
-                  <FormInput showLabel={true} name="bidAmount" label="Amount" placeholder="0.01" type="eth" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
+                  <FormInput showLabel={true} name="bidAmount" min={this.minimumAcceptableBid()} label="Amount" placeholder="0.01" type="eth" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
                 </Col>
               </Row>
               <Row>
