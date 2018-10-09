@@ -26,13 +26,13 @@ import smartContract from './contract';
 import './App.css';
 
 
-let web3;
-let readOnlyWeb3;
-let BigNumber;
-let fromWei;
-let toWei;
-let accounts = [];
-let WEI_STEP = '100000000000';
+let web3,
+    readOnlyWeb3,
+    BigNumber,
+    fromWei,
+    toWei,
+    accounts = [],
+    WEI_STEP = '100000000000';
 
 const FormInput = (props) => {
   let append;
