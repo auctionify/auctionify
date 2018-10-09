@@ -17,6 +17,7 @@ import {
   Row,
   InputGroupAddon,
   InputGroup,
+  Badge,
 } from 'reactstrap';
 import { HashRouter, Route, withRouter} from 'react-router-dom'
 
@@ -380,10 +381,14 @@ const HighestBid = props => {
   if (!props.bid || props.bid.isZero()) {
     return '';
   }
+  let you = '';
+  if (props.account && props.account === props.bidder) {
+    you = (<Badge color="light" className="you">You</Badge>);
+  }
   return (
     <div className="highest-bid">
       <h3>{fromWei(props.bid).toString()} ETH</h3>
-      <span>{props.bidder.substr(0, 10)}</span>
+      <div><span>{props.bidder.substr(0, 10)}</span>{you}</div>
       <small>highest bid</small>
     </div>
   );
@@ -503,7 +508,7 @@ class ShowAuction extends Component {
           </Col></Row>
           <Row>
             <Col className="text-center">
-              <HighestBid bid={this.state.highestBid} bidder={this.state.highestBidder} />
+              <HighestBid bid={this.state.highestBid} bidder={this.state.highestBidder} account={this.state.account} />
             </Col>
           </Row>
           <Row><Col>
