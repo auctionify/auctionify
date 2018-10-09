@@ -28,8 +28,11 @@ import './App.css';
 
 
 let web3;
+let readOnlyWeb3;
 let BigNumber;
-
+let fromWei;
+let toWei;
+let accounts = [];
 let WEI_STEP = '100000000000';
 
 const FormInput = (props) => {
@@ -50,12 +53,12 @@ const FormInput = (props) => {
 
   if (type === 'eth') {
     type = 'text';
-    value = web3.utils.fromWei(props.value);
+    value = fromWei(props.value);
 
     onChange = e => {
       const stringValue = e.target.value;
       if (isNaN(stringValue)) return;
-      const valueWei = new BigNumber(web3.utils.toWei(stringValue));
+      const valueWei = new BigNumber(toWei(stringValue));
 
       if (valueWei.lt(1)) return;
       if (valueWei.lt(min)) return;
@@ -78,8 +81,8 @@ const FormInput = (props) => {
       }
       const valueWei = props.value.add(diff);
       if (valueWei.lt(1)) return;
-
       if (valueWei.lt(min)) return;
+
       props.onChange({
         target: {
           name: props.name,
@@ -214,7 +217,6 @@ class CreateAuction extends Component {
       auctionEnd: moment().add(3, 'days').startOf('day'),
     };
 
-    this.setup().then(() => console.log("setup completed"));
     this.onInputChange = this.onInputChange.bind(this);
     this.createAuction = this.createAuction.bind(this);
     this.onDateChange = this.onDateChange.bind(this);
@@ -233,8 +235,7 @@ class CreateAuction extends Component {
     this.setState({ auctionEnd });
   }
 
-  async setup() {
-    const accounts = await web3.eth.getAccounts();
+  async componentDidMount() {
     this.setState({
       web3,
       accounts,
@@ -252,7 +253,7 @@ class CreateAuction extends Component {
 
     let transactionHash;
     try {
-      const contractor = new AuctionContractor(web3, this.state.account); // window.web3 or this.state.web3
+      const contractor = new AuctionContractor(web3, this.state.account);
        transactionHash = await contractor.create({
         title: this.state.title,
         auctionEnd: this.state.auctionEnd.unix().toString(),
@@ -382,7 +383,7 @@ const HighestBid = props => {
   }
   return (
     <div className="highest-bid">
-      <h3>{web3.utils.fromWei(props.bid).toString()} ETH</h3>
+      <h3>{fromWei(props.bid).toString()} ETH</h3>
       <span>{props.bidder.substr(0, 10)}</span>
       <small>highest bid</small>
     </div>
@@ -396,7 +397,6 @@ class ShowAuction extends Component {
       loading: true,
       loadingText: 'loading auction',
       contract: {},
-      accounts: [],
       account: null,
       now: moment(),
       description: '',
@@ -410,12 +410,10 @@ class ShowAuction extends Component {
     this.onInputChange = this.onInputChange.bind(this);
     this.bid = this.bid.bind(this);
 
-    this.setup();
   }
 
-  async setup() {
-    const accounts = await web3.eth.getAccounts();
-    const contractor = new AuctionContractor(web3, accounts[0]); // window.web3 or this.state.web3
+  async componentDidMount() {
+    const contractor = new AuctionContractor(readOnlyWeb3);
     this.contract = contractor.at(this.props.match.params.address);
     window.contract = this.contract;
 
@@ -432,7 +430,6 @@ class ShowAuction extends Component {
 
     this.setState({
       web3,
-      accounts,
       account: accounts[0],
       ...detail,
       loading: false,
@@ -440,20 +437,15 @@ class ShowAuction extends Component {
     });
 
 
-    // this.contract.events.HighestBidIncreased(console.log).on('data', event => {
-    //   console.log("data", event);
-    // }).on('changed', event => {
-    //   console.log("changed", event);
-    // }).on('error', console.error)
-    // //   const highestBidder = result.args.bidder;
-    // //   const highestBid = result.args.amount;
-
-    // //   this.setState({
-    // //     highestBidder,
-    // //     highestBid,
-    // //     bidAmount: web3.utils.BN.max(this.state.bidAmount, highestBid.add(WEI_STEP)),
-    // //   });
-    // // });
+    this.contract.events.HighestBidIncreased().on('data', ({returnValues}) => {
+      const highestBidder = returnValues.bidder;
+      const highestBid = new BigNumber(returnValues.amount);
+      this.setState({
+        highestBidder,
+        highestBid,
+        bidAmount: BigNumber.max(this.state.bidAmount, highestBid.add(WEI_STEP)),
+      });
+    });
 
     setInterval(() => {
       this.setState({
@@ -472,12 +464,15 @@ class ShowAuction extends Component {
   }
 
   async bid(e) {
+    const contractor = new AuctionContractor(web3, accounts[0]);
+    const contract = contractor.at(this.props.match.params.address);
+
     e.preventDefault();
     this.setState({
       loading: true,
       loadingText: 'Sending Transaction',
     });
-    let {transactionHash} = await this.contract.methods.bid().send({
+    let {transactionHash} = await contract.methods.bid().send({
       from: this.state.account,
       value: this.state.bidAmount,
     }).on('transactionHash', hash => {
@@ -554,10 +549,21 @@ class App extends Component {
   }
 
   async setup() {
-    web3 = await getWeb3();
-    BigNumber = web3.utils.BN;
+    const web3s = await getWeb3();
+
+    web3 = web3s.web3;
+    readOnlyWeb3 = web3s.readOnlyWeb3;
+
+    BigNumber = readOnlyWeb3.utils.BN;
+    toWei = readOnlyWeb3.utils.toWei;
+    fromWei = readOnlyWeb3.utils.fromWei;
+
+    if (web3) {
+      accounts = await web3.eth.getAccounts();
+    }
 
     window.web3 = web3;
+    window.readOnlyWeb3 = readOnlyWeb3;
     window.BigNumber = BigNumber;
 
     WEI_STEP = new BigNumber(WEI_STEP);
@@ -582,7 +588,7 @@ class App extends Component {
 
 
   render() {
-    let content = (<div>Loading</div>);
+    let content = (<div></div>);
     if (this.state.loaded) {
       content = (
         <Container id="main">

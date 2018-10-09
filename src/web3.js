@@ -1,15 +1,25 @@
 import Web3 from 'web3'
 
 export async function getWeb3() {
+  let web3;
+  let network = 'ropsten';
+  // let network = 'mainnet';
+
   if (window.ethereum) {
-    const web3 = new Web3(window.ethereum);
+    web3 = new Web3(window.ethereum);
     await window.ethereum.enable();
-    return web3;
   } else if (window.web3) {
-    // return new Web3('https://ropsten.infura.io/v3/462d104bd22247fcb9d06380b232ef64');
-    // return new Web3(new Web3.providers.WebsocketProvider("wss://mainnet.infura.io/ws"));
-    return new Web3(window.web3.currentProvider);
+    web3 = new Web3(window.web3.currentProvider);
   }
-  throw new Error('Non-Ethereum browser detected. You should consider trying MetaMask!');
+
+  if (web3) {
+    network = await web3.eth.net.getNetworkType();
+  }
+
+  const readOnlyWeb3 = new Web3(new Web3.providers.WebsocketProvider(`wss://${network}.infura.io/ws/`));
+  return {
+    web3,
+    readOnlyWeb3,
+  }
 }
 
