@@ -192,7 +192,7 @@ const Auctionify = () => {
       <Row>
         <Col>
           <h1 className="brand-title">&bull; Auctionify &bull;</h1>
-          <small id="version">v0.0.2</small>
+          <small id="version">v0.0.3</small>
         </Col>
       </Row>
       <Row>
