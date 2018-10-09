@@ -21,9 +21,8 @@ import {
 import { HashRouter, Route, withRouter} from 'react-router-dom'
 
 import {getWeb3} from './web3';
+import smartContract from './contract';
 
-
-import {getTransactionReceipt, AuctionContractor} from './contract';
 import './App.css';
 
 
@@ -251,42 +250,42 @@ class CreateAuction extends Component {
       loadingText: 'Deploying Contract'
     });
 
-    let transactionHash;
-    try {
-      const contractor = new AuctionContractor(web3, this.state.account);
-       transactionHash = await contractor.create({
-        title: this.state.title,
-        auctionEnd: this.state.auctionEnd.unix().toString(),
-        beneficiary: this.state.account,
-        description: this.state.description,
-        minimumBid: this.state.minimumBid,
-      });
-    } catch (e) {
+    const contract = new web3.eth.Contract(smartContract.ABI);
+    const args = [
+      this.state.title,
+      this.state.auctionEnd.unix().toString(),
+      this.state.account,
+      this.state.description,
+      this.state.minimumBid.toString(),
+    ];
+    console.log("Deploy contract", args);
+
+    contract.deploy({
+      data: smartContract.DATA,
+      arguments: args,
+    }).send({
+      from: this.state.account,
+      gas: 3000000,
+    }).on('error', err => {
+      console.log(err);
       this.setState({
-        loadingText: 'Denied!',
+        loading: false,
+      });
+    }).on('transactionHash', transactionHash => {
+      this.setState({
+        loadingText: `Confirming ${transactionHash.substr(0, 10)}`,
+      });
+    }).on('receipt', receipt => {
+      this.setState({
+        loadingText: 'Confirmed!'
       });
       setTimeout(() => {
         this.setState({
           loading: false,
         });
-      }, 1000);
-      return;
-    }
-    this.setState({
-      loadingText: `Confirming ${transactionHash.substr(0, 10)}`,
-    });
-    const receipt = await getTransactionReceipt(window.web3, transactionHash);
-    
-    this.setState({
-      loadingText: 'Confirmed!'
-    });
-
-    setTimeout(() => {
-      this.setState({
-        loading: false,
-      });
-      this.props.history.push(`/auction/${receipt.contractAddress}`);
-    }, 2000);
+        this.props.history.push(`/auction/${receipt.contractAddress}`);
+      }, 2000);
+    })
   }
 
   render() {
@@ -413,8 +412,7 @@ class ShowAuction extends Component {
   }
 
   async componentDidMount() {
-    const contractor = new AuctionContractor(readOnlyWeb3);
-    this.contract = contractor.at(this.props.match.params.address);
+    this.contract = new readOnlyWeb3.eth.Contract(smartContract.ABI, this.props.match.params.address);
     window.contract = this.contract;
 
     const detail = {
@@ -464,8 +462,7 @@ class ShowAuction extends Component {
   }
 
   async bid(e) {
-    const contractor = new AuctionContractor(web3, accounts[0]);
-    const contract = contractor.at(this.props.match.params.address);
+    const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
 
     e.preventDefault();
     this.setState({
@@ -480,7 +477,7 @@ class ShowAuction extends Component {
         loadingText: `Confirming ${hash.substr(0, 10)}`,
       });
     });
-    console.log(transactionHash);
+
     this.setState({
       loading: false
     });
@@ -573,27 +570,13 @@ class App extends Component {
     });
   }
 
-  busy(val) {
-    console.log(val);
-    this.setState({
-      busy: !!val
-    });
-  }
-
-  withBusy(Component) {
-    return (props) => {
-      return <Component {...props} busy={this.busy} />
-    }
-  }
-
-
   render() {
     let content = (<div></div>);
     if (this.state.loaded) {
       content = (
         <Container id="main">
-          <Route path="/" exact={true} component={this.withBusy(withRouter(CreateAuction))} />
-          <Route path="/auction/:address" component={this.withBusy(withRouter(ShowAuction))} />
+          <Route path="/" exact={true} component={withRouter(CreateAuction)} />
+          <Route path="/auction/:address" component={withRouter(ShowAuction)} />
         </Container>
       );
     }
