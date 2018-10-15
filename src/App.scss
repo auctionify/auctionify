@@ -1,0 +1,404 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400,700');
+
+$accent: #F60;
+
+html, body, #root{
+  height:100%;
+  margin:0;
+  padding:0
+}
+
+body {
+  background: #e4edf2;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-family: 'Roboto Condensed', sans-serif;
+}
+
+.main-container {
+  padding: 0;
+  height: 100%;
+  display: flex;
+}
+
+@media (max-width: 991.98px) {
+  .main-container {
+    display: block;
+  }
+}
+
+.main {
+  align-self: center;  
+  background-color: #fff;
+  box-shadow: 0px 12px 46px -15px rgba(0,0,0,0.35);
+  padding: 0px;
+}
+
+.accent-bg {
+  background: $accent;
+}
+
+
+.brand {
+  display: flex;
+  height: 100%;
+  color: white;
+
+  h1 {
+    margin-top: 10px;
+    font-weight: 300;
+  }
+}
+
+.form-group {
+  margin-bottom: 5px;
+}
+.input-group {
+  margin-top: 35px;
+
+  .input-group-text {
+    background: none !important;
+    border: none !important;
+    border-bottom: solid 2px #e8ebed !important;
+    border-radius: 0 !important;
+    cursor: default;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    color: gray;
+  }
+
+  input:focus + .input-group-append .input-group-text {
+    border-bottom: 2px solid #777 !important;
+  }
+}
+
+input.withFlyingLabel,
+textarea.withFlyingLabel,
+select.withFlyingLabel {
+  background: none;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 2px solid #e8ebed;
+  font-size: 16px;
+  padding: 6px 0px;
+  -webkit-appearance: none;
+
+  &:focus {
+    outline: 0;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    border-bottom: 2px solid #777;
+  }
+}
+
+select {
+  background: url('https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-ios7-arrow-down-32.png') no-repeat right !important;
+  background-size:16px 17px !important;
+}
+
+label.flyingLabel {
+  position: absolute;
+  font-weight: bold;
+  opacity: 0;
+  top: -5px;
+  transition: all 0.3s;
+  font-size: 14px;
+  
+  &.visible {
+    top: -17px;
+    opacity: 1;
+  }
+}
+
+#createAuctionBtn {
+  margin-top: 15px;
+  padding: 6px 25px;
+
+  background-color: lighten($accent, 10%);
+  border-color: lighten($accent, 10%);
+
+  &:hover {
+    background-color: $accent;
+  }
+  &:focus {
+    outline: 0;
+    box-shadow: none !important;
+  }
+}
+
+div.countdown {
+  text-align: center;
+  white-space: nowrap;
+
+  .section {
+    display: inline-block;
+
+    span.label {
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 700;
+    }
+  }
+  .time, .separater {
+    background: #474544;
+    display: inline-block;
+    border-radius: 3px;
+    width: 60px;
+    height: 60px;
+    font-size: 40px;
+    line-height: 60px;
+    text-align: center;
+    color: #fff;
+  }
+
+  .separater {
+    background: none;
+    width: 20px;
+    text-align: center;
+    font-weight: 700;
+  }
+}
+
+
+.footer {
+  position: absolute;
+  padding: 15px 2px;
+  color: gray;
+  // cursor: default;
+  font-size: 14px;
+  a {
+    color: gray;
+    &:hover {
+      text-decoration: none;
+      color: black;
+    }
+  }
+}
+@keyframes move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+.auction-placeholder {
+  height: 400px;
+
+  &:after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background-image: linear-gradient(
+      -45deg, 
+      rgba(255, 255, 255, .1) 25%, 
+      transparent 25%, 
+      transparent 50%, 
+      rgba(255, 255, 255, .1) 50%, 
+      rgba(255, 255, 255, .1) 75%, 
+      transparent 75%, 
+      transparent
+    );
+    z-index: 1;
+    background-size: 50px 50px;
+    animation: move 2s linear infinite;
+    overflow: hidden;
+  }
+}
+
+.auction-header {
+  text-align: center;
+  color: white;
+  padding: 30px 10px;
+
+  #auction-title {
+    text-transform: uppercase;
+    font-size: 3em;
+    margin-bottom: 20px;
+  }
+
+  .highest-bid {
+    background: #fefefe;
+    border-radius: 3px;
+    text-align: center;
+    color: black;
+    text-transform: uppercase;
+    padding: 10px;
+
+    .hb-label {
+      position: relative;
+      width: 40px;
+      background: #474544;
+      border-radius: 3px 0px 0px 3px;
+
+      div {
+        transform: rotate(-90deg);
+        width: 100px !important;
+        height: 44px;
+        font-size: 12px;
+        transform-origin: bottom;
+        margin-left: -10px;
+        color: white;
+      }
+    }
+  }
+  // .highest-bid h3 {
+  //   margin-bottom: 0;
+  // }
+  // .highest-bid span {
+  //   font-size: 14px;
+  // }
+  // .highest-bid small {
+  //   font-size: 11px;
+  // }
+  // .highest-bid .you {
+  //   font-weight: 300;
+  //   font-size: 12px;
+  //   margin: auto 10px;
+  //   border-radius: 0;
+  // }
+
+}
+
+/*
+
+#main #content {
+  padding: 0px 60px 60px 60px;
+}
+
+h1.brand-title {
+  color: #474544;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 7px;
+  text-align: center;
+  text-transform: uppercase;
+  margin: 35px;
+  white-space: nowrap;
+}
+
+small#version {
+  display: block;
+  margin: -30px auto 10px auto;
+  width: 100px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  #main {
+    margin: 1px auto;
+  }
+  #main #content{
+    padding: 0px 10px 10px 10px;
+  }
+  h1.brand-title {
+    margin: 15px 0px 30px 0px;
+  }
+}
+
+.underline {
+  border-bottom: solid 2px #474544;
+  margin: 0px auto 20px auto;
+  width: 33%;
+}
+
+#auctionForm .row {
+  margin-top: 35px;
+  margin-bottom: 25px;
+}
+
+button, input, select, textarea, label, .form-control {
+  color: #5A5A5A;
+  font: inherit;
+  text-transform: uppercase;
+}
+
+
+
+
+input[type='text'],
+input[type='email'],
+input[type='number'],
+select,
+textarea {
+  background: none !important;
+  border: none !important;
+  -webkit-appearance: none;
+  border-bottom: solid 2px #474544 !important;
+  color: #474544;
+  font-size: 1.000em;
+  font-weight: 400;
+  letter-spacing: 1px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+input[type='text']:focus,
+input[type='email']:focus,
+input[type='number']:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  background: none;
+  border: none;
+  border-bottom: solid 2px #474544;
+  color: #474544;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+
+button#createAuction, button#bid {
+  background: none;
+  border-radius: 0;
+  -webkit-appearance: none;
+  border: solid 2px #474544;
+  color: #474544;
+  font-size: 1.000em;
+  font-weight: 400;
+  padding: 15px 40px;
+  font-weight: 700;
+  margin: 50px auto 10px auto;
+  display: block;
+}
+button#bid {
+  margin: 10px auto;
+  width: 100%;
+}
+
+button#createAuction:hover, button#bid:hover {
+  background: #474544;
+  color: #EEE;
+}
+
+button#createAuction:focus, button#bid:focus {
+  outline: 0;
+  box-shadow: none !important;
+}
+
+select {
+  background: url('https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-ios7-arrow-down-32.png') no-repeat right !important;
+}
+
+textarea {
+  margin-top: 10px;
+  min-height: 100px !important;
+  padding-bottom: 10px !important;
+}
+.row.inset {
+  margin: 0px -60px;
+  padding: 40px;
+  border: 1px solid #ffffff;
+  border-width: 1px 0px;
+}
+
+
+
+
+div[class^="sc-"] {
+  text-transform: uppercase;
+  font-size: 13px;
+}
+*/
