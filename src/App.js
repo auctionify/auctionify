@@ -423,6 +423,9 @@ class HighestBid extends Component {
     }
   }
   componentDidMount() {
+    this.resize();
+  }
+  resize() {
     const ml = parseInt(getComputedStyle(this.containerEl, null).getPropertyValue('padding-left'));
     this.setState({
       style: {
@@ -439,9 +442,9 @@ class HighestBid extends Component {
       return '';
     }
 
-    let you = '';
+    let youVisible = false;
     if (props.account && props.account === props.bidder) {
-      you = (<Badge color="light" className="you">You</Badge>);
+      youVisible = true;
     }
 
     return (
@@ -457,8 +460,8 @@ class HighestBid extends Component {
           <Row className="pl-4">
             <Col>
               <h3>{fromWei(props.bid).toString()} ETH</h3>
-              <div><span>{props.bidder.substr(0, 10)}</span>{you}</div>
-              <small>highest bid</small>
+              <div><span>{props.bidder.substr(0, 10)}</span></div>
+              <div style={{visibility: youVisible ? 'visible' : 'hidden'}}><Badge color="dark" className="you"><i className="fa fa-star"></i> You</Badge></div>
             </Col>
           </Row>
         </div>
@@ -514,18 +517,18 @@ class ShowAuction extends Component {
     });
   }
 
-  async bid(e) {
+  async bid({bidAmount}) {
     const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
 
-    e.preventDefault();
     this.setState({
       loading: true,
       loadingText: 'Sending Transaction',
     });
     
+    console.log(this.state.auction.account, bidAmount)
     await contract.methods.bid().send({
-      from: this.state.account,
-      value: this.state.bidAmount,
+      from: this.state.auction.account,
+      value: bidAmount,
     }).on('transactionHash', hash => {
       this.setState({
         loadingText: `Confirming ${hash.substr(0, 10)}`,
@@ -540,7 +543,7 @@ class ShowAuction extends Component {
   render() {
     let auction = (<div className="accent-bg auction-placeholder"><span></span></div>);
     if (this.state.auction) {
-      auction = (<Auction auction={this.state.auction} />);
+      auction = (<Auction auction={this.state.auction} onBid={this.bid} />);
     }
     return (
       <LoadingOverlay background="rgba(255,255,255,.7)" color="#F60" active={this.state.loading} spinner text={this.state.loadingText}>
@@ -560,6 +563,7 @@ class Auction extends Component {
     }
 
     this.onInputChange = this.onInputChange.bind(this);
+    this.submit = this.submit.bind(this);
   }
 
   onInputChange({target}) {
@@ -581,6 +585,13 @@ class Auction extends Component {
 
   minimumAcceptableBid() {
     return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(WEI_STEP))
+  }
+
+  submit(e) {
+    e.preventDefault();
+    this.props.onBid({
+      bidAmount: this.state.bidAmount,
+    });
   }
 
   render() {
@@ -623,8 +634,8 @@ class Auction extends Component {
                   </Col>
                 </Row>
                 <Row>
-                  <Col>
-                    <Button id="bid" color="primary" size="lg">Bid</Button>
+                  <Col className="text-right">
+                    <Button id="bid" color="primary" onClick={this.submit}>Bid</Button>
                   </Col>
                 </Row>
               </Form>
