@@ -614,8 +614,6 @@ class Auction extends Component {
         </Col>
         <Col className="py-4">
           <Container>
-            <Row><Col>
-            </Col></Row>
             <Row>
               <Col className="text-center">
                 <CountDown now={this.state.now} to={auction.auctionEnd.clone().add(1,'month')} />
