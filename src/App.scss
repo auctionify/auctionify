@@ -21,17 +21,23 @@ body {
   display: flex;
 }
 
+.main {
+  align-self: center;  
+  background-color: #fff;
+  box-shadow: 0px 12px 46px -15px rgba(0,0,0,0.35);
+  padding: 0px;
+}
+
 @media (max-width: 991.98px) {
   .main-container {
     display: block;
   }
 }
 
-.main {
-  align-self: center;  
-  background-color: #fff;
-  box-shadow: 0px 12px 46px -15px rgba(0,0,0,0.35);
-  padding: 0px;
+@media (max-width: 575.98px) {
+  .main {
+    box-shadow: none;
+  }
 }
 
 .accent-bg {
@@ -104,8 +110,8 @@ label.flyingLabel {
   font-size: 14px;
   
   &.visible {
-    top: -17px;
-    opacity: 1;
+    top: -16px;
+    opacity: 0.85;
   }
 }
 
@@ -163,7 +169,6 @@ div.countdown {
   position: absolute;
   padding: 15px 2px;
   color: gray;
-  // cursor: default;
   font-size: 14px;
   a {
     color: gray;
@@ -215,7 +220,7 @@ div.countdown {
   #auction-title {
     text-transform: uppercase;
     font-size: 3em;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
 
   .highest-bid {
@@ -225,6 +230,33 @@ div.countdown {
     color: black;
     text-transform: uppercase;
     padding: 5px;
+    margin-bottom: 20px;
+
+    h3 {
+      margin: 25px auto -5px auto;
+      letter-spacing: -1px;
+      font-size: 35px;
+    }
+
+    .bidder {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #333;
+
+      .you {
+        border-radius: 2px;
+        background: $accent;
+        border: 0;
+        margin-left: 5px;
+        position: relative;
+        top: -1px;
+
+        &.hidden {
+          display: none;
+        }
+      }
+    }
+
   }
 
   .hb-label {
@@ -239,25 +271,12 @@ div.countdown {
     transform: rotate(-90.0deg);
     transform-origin: left top 0;
   }
+}
 
-  .highest-bid h3 {
-    margin: 30px auto -10px auto;
-    letter-spacing: -1px;
-    font-size: 35px;
-  }
-  .highest-bid span {
-    font-size: 12px;
-  }
-  // .highest-bid small {
-  //   font-size: 11px;
-  // }
-  // .highest-bid .you {
-  //   font-weight: 300;
-  //   font-size: 12px;
-  //   margin: auto 10px;
-  //   border-radius: 0;
-  // }
-
+.bid-container {
+  border-top: 2px solid $accent;
+  margin-top: 10px;
+  padding-top: 10px;
 }
 
 /*

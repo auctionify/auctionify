@@ -460,8 +460,12 @@ class HighestBid extends Component {
           <Row className="pl-4">
             <Col>
               <h3>{fromWei(props.bid).toString()} ETH</h3>
-              <div><span>{props.bidder.substr(0, 10)}</span></div>
-              <div style={{visibility: youVisible ? 'visible' : 'hidden'}}><Badge color="dark" className="you"><i className="fa fa-star"></i> You</Badge></div>
+              <div className="bidder">
+                <span className="address">{props.bidder.substr(0, 14)}</span>
+                <Badge color="dark" className={`you ${youVisible ? 'visible' : 'hidden'}`}>
+                  <i className="fa fa-star"></i> You
+                </Badge>
+              </div>
             </Col>
           </Row>
         </div>
@@ -524,20 +528,24 @@ class ShowAuction extends Component {
       loading: true,
       loadingText: 'Sending Transaction',
     });
-    
-    console.log(this.state.auction.account, bidAmount)
-    await contract.methods.bid().send({
-      from: this.state.auction.account,
-      value: bidAmount,
-    }).on('transactionHash', hash => {
-      this.setState({
-        loadingText: `Confirming ${hash.substr(0, 10)}`,
+    try {
+      await contract.methods.bid().send({
+        from: this.state.auction.account,
+        value: bidAmount,
+      }).on('transactionHash', hash => {
+        this.setState({
+          loadingText: `Confirming ${hash.substr(0, 10)}`,
+        });
+      }).on('error', err => {
+        this.setState({
+          loading: false
+        });
       });
-    });
-
-    this.setState({
-      loading: false
-    });
+    } catch (e) {
+      this.setState({
+        loading: false
+      });
+    }
   }
 
   render() {
@@ -611,33 +619,38 @@ class Auction extends Component {
           <Row>
             <HighestBid bid={auction.highestBid} bidder={auction.highestBidder} account={auction.account} />
           </Row>
+          <Row>
+            <Col className="text-center p-0">
+              <CountDown now={this.state.now} to={auction.auctionEnd.clone().add(1,'month')} />
+            </Col>
+          </Row>
         </Col>
         <Col className="py-4">
           <Container>
-            <Row>
-              <Col className="text-center">
-                <CountDown now={this.state.now} to={auction.auctionEnd.clone().add(1,'month')} />
-              </Col>
-            </Row>
             <Row><Col>
               <p id="auction-description">{auction.description.split(/\n/).map((line, key) => {
                 return <Fragment key={key}>{line}<br /></Fragment>;
               })}</p>
             </Col></Row>
-            <Row><Col md={{offset: 3, size: 6}}>
-              <Form onSubmit={this.bid} id="bidForm">
-                <Row>
-                  <Col>
-                    <FormInput showLabel={true} name="bidAmount" min={this.minimumAcceptableBid()} label="Amount" placeholder="0.01" type="eth" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
-                  </Col>
-                </Row>
-                <Row>
-                  <Col className="text-right">
-                    <Button id="bid" color="primary" onClick={this.submit}>Bid</Button>
-                  </Col>
-                </Row>
-              </Form>
-            </Col></Row>
+            <Row className="bid-container">
+              <Col
+                sm={{size: 8, offset: 2}}
+                md={{size: 6, offset: 3}}
+                lg={{size: 4, offset: 4}} >
+                <Form onSubmit={this.bid} id="bidForm">
+                  <Row>
+                    <Col>
+                      <FormInput showLabel={true} name="bidAmount" min={this.minimumAcceptableBid()} label="Amount" placeholder="0.01" type="eth" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col className="text-right">
+                      <Button id="bid" color="primary" onClick={this.submit}>Bid</Button>
+                    </Col>
+                  </Row>
+                </Form>
+              </Col>
+            </Row>
           </Container>
         </Col>
       </Row>
