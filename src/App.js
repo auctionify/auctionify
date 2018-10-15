@@ -584,11 +584,15 @@ class Auction extends Component {
   }
 
   componentDidMount() {
-    setInterval(() => {
+    this.intervalId = setInterval(() => {
       this.setState({
         now: moment(),
       });
     }, 1000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.intervalId);
   }
 
   minimumAcceptableBid() {
