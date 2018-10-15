@@ -414,34 +414,57 @@ const CountDown = props => {
 }
 
 
-const HighestBid = props => {
-  if (!props.bid || props.bid.isZero()) {
-    return '';
+class HighestBid extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      style: {
+      }
+    }
   }
-  let you = '';
-  if (props.account && props.account === props.bidder) {
-    you = (<Badge color="light" className="you">You</Badge>);
+  componentDidMount() {
+    const ml = parseInt(getComputedStyle(this.containerEl, null).getPropertyValue('padding-left'));
+    this.setState({
+      style: {
+        width: `${this.containerEl.offsetHeight}px`,
+        top: `${this.containerEl.offsetHeight}px`,
+        marginLeft: `${-ml}px`,
+      }
+    })
   }
-  return (
-    <Col
-      sm={{size: 8, offset: 2}}
-      md={{size: 6, offset: 3}}
-      lg={{size: 4, offset: 4}}
-    >
-      <div className="highest-bid container">
-        <Row className="d-flex">
-          <Col xs="auto" className="hb-label">
-            <div>Highest Bid</div>
-          </Col>
-          <Col>
-            <h3>{fromWei(props.bid).toString()} ETH</h3>
-            <div><span>{props.bidder.substr(0, 10)}</span>{you}</div>
-            <small>highest bid</small>
-          </Col>
-        </Row>
-      </div>
-    </Col>
-  );
+  render() {
+    const props = this.props;
+
+    if (!props.bid || props.bid.isZero()) {
+      return '';
+    }
+
+    let you = '';
+    if (props.account && props.account === props.bidder) {
+      you = (<Badge color="light" className="you">You</Badge>);
+    }
+
+    return (
+      <Col
+        sm={{size: 8, offset: 2}}
+        md={{size: 6, offset: 3}}
+        lg={{size: 4, offset: 4}}
+      >
+        <div className="highest-bid container" ref={el => this.containerEl = el}>
+          <div className="hb-label" style={this.state.style} ref={el => this.boxLabelEl = el}>
+            <i className="fa fa-trophy"></i> &nbsp;Highest Bid
+          </div>
+          <Row className="pl-4">
+            <Col>
+              <h3>{fromWei(props.bid).toString()} ETH</h3>
+              <div><span>{props.bidder.substr(0, 10)}</span>{you}</div>
+              <small>highest bid</small>
+            </Col>
+          </Row>
+        </div>
+      </Col>
+    );
+  }
 }
 
 class ShowAuction extends Component {

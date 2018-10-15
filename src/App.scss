@@ -219,29 +219,26 @@ div.countdown {
 
   .highest-bid {
     background: #fefefe;
-    border-radius: 3px;
+    border-radius: 0px 3px 3px 0px;
     text-align: center;
     color: black;
     text-transform: uppercase;
     padding: 10px;
-
-    .hb-label {
-      position: relative;
-      width: 40px;
-      background: #474544;
-      border-radius: 3px 0px 0px 3px;
-
-      div {
-        transform: rotate(-90deg);
-        width: 100px !important;
-        height: 44px;
-        font-size: 12px;
-        transform-origin: bottom;
-        margin-left: -10px;
-        color: white;
-      }
-    }
   }
+
+  .hb-label {
+    position: absolute;
+    height: auto;
+    background: #474544;
+    border-radius: 3px 3px 0px 0px;
+    color: white;
+    padding: 3px 10px;
+    z-index: 1;
+    font-size: 13px;
+    transform: rotate(-90.0deg);
+    transform-origin: left top 0;
+  }
+
   // .highest-bid h3 {
   //   margin-bottom: 0;
   // }
