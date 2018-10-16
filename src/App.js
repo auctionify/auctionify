@@ -425,7 +425,10 @@ class HighestBid extends Component {
   componentDidMount() {
     this.resize();
   }
+
   resize() {
+    if (!this.containerEl) return;
+
     const ml = parseInt(getComputedStyle(this.containerEl, null).getPropertyValue('padding-left'));
     this.setState({
       style: {
@@ -435,6 +438,7 @@ class HighestBid extends Component {
       }
     })
   }
+
   render() {
     const props = this.props;
 
@@ -506,16 +510,15 @@ class ShowAuction extends Component {
       loading: false,
     });
 
-
     contract.events.HighestBidIncreased().on('data', ({returnValues}) => {
       const highestBidder = returnValues.bidder;
       const highestBid = new BigNumber(returnValues.amount);
+
       this.setState({
         auction: {
           ...this.state.auction,
           highestBidder,
           highestBid,
-          bidAmount: BigNumber.max(this.state.auction.bidAmount, this.state.auction.highestBid.add(WEI_STEP)),
         }
       });
     });
@@ -528,7 +531,9 @@ class ShowAuction extends Component {
       loading: true,
       loadingText: 'Sending Transaction',
     });
+
     try {
+
       await contract.methods.bid().send({
         from: this.state.auction.account,
         value: bidAmount,
@@ -540,6 +545,10 @@ class ShowAuction extends Component {
         this.setState({
           loading: false
         });
+      });
+
+      this.setState({
+        loading: false
       });
     } catch (e) {
       this.setState({
@@ -606,10 +615,27 @@ class Auction extends Component {
     });
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.auction.highestBid === prevProps.auction.highestBid) return;
+    console.log(this.state.bidAmount, this.props.auction.highestBid);
+    console.log(this.state.bidAmount.toString(), this.props.auction.highestBid.add(WEI_STEP).toString());
+    this.setState({
+      bidAmount: BigNumber.max(this.state.bidAmount, this.props.auction.highestBid.add(WEI_STEP)),
+    });
+  }
+
   render() {
     const {auction} = this.props;
     if (!auction) {
       return '';
+    }
+
+    let highestBidComponent = '';
+
+    if (!auction.highestBid.isZero()) {
+      highestBidComponent = (
+        <HighestBid bid={auction.highestBid} bidder={auction.highestBidder} account={auction.account} />
+      )
     }
 
     return (
@@ -621,11 +647,11 @@ class Auction extends Component {
             </Col>
           </Row>
           <Row>
-            <HighestBid bid={auction.highestBid} bidder={auction.highestBidder} account={auction.account} />
+            {highestBidComponent}
           </Row>
           <Row>
             <Col className="text-center p-0">
-              <CountDown now={this.state.now} to={auction.auctionEnd.clone().add(1,'month')} />
+              <CountDown now={this.state.now} to={auction.auctionEnd} />
             </Col>
           </Row>
         </Col>
