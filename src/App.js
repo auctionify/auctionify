@@ -24,7 +24,7 @@ import {
 import { HashRouter, Route, withRouter} from 'react-router-dom'
 
 import {getWeb3} from './web3';
-import smartContract from './contract';
+import smartContract from '@auctionify/smart-contract'
 
 import './App.scss';
 
@@ -247,7 +247,7 @@ class CreateAuction extends Component {
       loadingText: 'Deploying Contract'
     });
 
-    const contract = new web3.eth.Contract(smartContract.ABI);
+    const contract = new web3.eth.Contract(smartContract.API);
     const args = [
       data.title,
       data.auctionEnd.unix().toString(),
@@ -258,7 +258,7 @@ class CreateAuction extends Component {
     console.log("Deploy contract", args);
 
     contract.deploy({
-      data: smartContract.DATA,
+      data: smartContract.bytecode,
       arguments: args,
     }).send({
       from: data.account,
@@ -490,7 +490,7 @@ class ShowAuction extends Component {
   }
 
   async componentDidMount() {
-    const contract = new readOnlyWeb3.eth.Contract(smartContract.ABI, this.props.match.params.address);
+    const contract = new readOnlyWeb3.eth.Contract(smartContract.API, this.props.match.params.address);
     window.contract = contract;
 
     const auction = {
@@ -525,7 +525,7 @@ class ShowAuction extends Component {
   }
 
   async bid({bidAmount}) {
-    const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
+    const contract = new web3.eth.Contract(smartContract.API, this.props.match.params.address);
 
     this.setState({
       loading: true,
