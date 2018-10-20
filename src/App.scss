@@ -130,9 +130,11 @@ label.flyingLabel {
     opacity: 0.85;
   }
 }
-
+.winner-notice {
+  color: gray;
+  font-size: 14px;
+}
 #createAuctionBtn, #bid {
-  margin-top: 15px;
   padding: 6px 25px;
 
   background-color: lighten($accent, 10%);

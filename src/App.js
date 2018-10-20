@@ -454,7 +454,7 @@ class CreateAuctionForm extends Component {
               {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
             </FormInput>
           </Col></Row>
-          <Row><Col>
+          <Row className="mt-3"><Col>
             <FormGroup className="text-right">
               <Button disabled={!this.state.isValid} id="createAuctionBtn" color="primary">Create Auction</Button>
             </FormGroup>
@@ -500,7 +500,17 @@ const CountDown = props => {
   );
 }
 
-
+const WinningNotice = props => {
+  if (props.account && props.account === props.bidder) {
+    return (
+      <div>
+        <i className="fa fa-trophy"></i>
+        You are the highest bidder!
+      </div>
+    );
+  }
+  return '';
+}
 class HighestBid extends Component {
   constructor(props) {
     super(props);
@@ -771,9 +781,12 @@ class Auction extends Component {
                       />
                     </Col>
                   </Row>
-                  <Row>
-                    <Col className="text-right">
-                      <Button id="bid" color="primary" onClick={this.submit}>Bid</Button>
+                  <Row className="mt-2">
+                    <Col sm={{size: 4, order:2}} className="text-right">
+                      <Button id="bid" block color="primary" onClick={this.submit}>Bid</Button>
+                    </Col>
+                    <Col order={1} className="text-center text-sm-left mt-2 winner-notice">
+                       <WinningNotice bidder={auction.highestBidder} account={auction.account} />
                     </Col>
                   </Row>
                 </Form>
