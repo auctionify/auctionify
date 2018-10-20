@@ -297,7 +297,7 @@ const Auctionify = () => {
           <h1>Auctionify</h1>
         </Col>
         <Col>
-          <p>001</p>
+          <p>101</p>
         </Col>
       </div>
     </Row>
