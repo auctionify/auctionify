@@ -98,7 +98,6 @@ select.withFlyingLabel {
   border-bottom: 2px solid #e8ebed;
   font-size: 16px;
   padding: 6px 0px;
-  -webkit-appearance: none;
 
   &:focus {
     outline: 0;
@@ -112,6 +111,9 @@ select.withFlyingLabel {
   }
 }
 
+select.withFlyingLabel {
+  -webkit-appearance: none;
+}
 select {
   background: url('https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-ios7-arrow-down-32.png') no-repeat right !important;
   background-size:16px 17px !important;
