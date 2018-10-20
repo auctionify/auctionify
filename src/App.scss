@@ -58,7 +58,19 @@ body {
 
 .form-group {
   margin-bottom: 5px;
+
+  &.is-invalid {
+    input, input:focus {
+      border-bottom: 2px solid red;
+
+      & + .input-group-append .input-group-text {
+        border-bottom: 2px solid red !important;
+        color: red;
+      }
+    }
+  }
 }
+
 .input-group {
   margin-top: 35px;
 
@@ -93,6 +105,10 @@ select.withFlyingLabel {
     box-shadow: none !important;
     -webkit-box-shadow: none !important;
     border-bottom: 2px solid #777;
+  }
+
+  &[readonly] {
+    background-color: white;
   }
 }
 
