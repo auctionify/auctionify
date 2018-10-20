@@ -124,6 +124,7 @@ class FormInput extends Component {
 
   onKeyDown(e) {
     if (this.props.type === 'eth') {
+      if (this.state.invalid) return;
       const diff = WEI_STEP.clone();
       if (e.keyCode === 38) {
         // do nothing
