@@ -28,67 +28,103 @@ import smartContract from '@auctionify/smart-contract'
 
 import './App.scss';
 
+window.smartContract = smartContract;
 let web3,
     readOnlyWeb3,
     BigNumber,
     fromWei,
     toWei,
     accounts = [],
-    WEI_STEP = '100000000000';
+    WEI_STEP = '10000000000000000';
 
-const FormInput = (props) => {
-  let inputElement;
-  const focus = () => {
-    inputElement && inputElement.focus();
-  }
-  let append;
-  if (props.append) {
-    append = (
-      <InputGroupAddon onClick={focus} addonType="append">
-        {props.append}
-      </InputGroupAddon>
-    );
-  }else if (props.appendIcon) {
-    append = (
-      <InputGroupAddon onClick={focus} addonType="append">
-        <span className="input-group-text">
-          <i className={props.appendIcon}></i>
-        </span>
-      </InputGroupAddon>
-    );
+class FormInput extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      value: props.value,
+      invalid: false,
+    }
+
+    if (this.props.type === 'eth') {
+      this.state.value = fromWei(this.state.value);
+    }
+
+    this.inputElement = null;
+    this.focus = this.focus.bind(this);
+    this.onChange = this.onChange.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.handleWithError = this.handleWithError.bind(this);
   }
 
-  const className = `flyingLabel ${(props.showLabel || props.value)?"visible":""}`;
+  setValue(val) {
+    let properValue = val;
 
-  let onChange = props.onChange;
-  let onKeyDown = props.onKeyDown;
-  let type = props.type;
-  let value = props.value;
+    if (this.props.type === 'eth') {
+      properValue = fromWei(val);
+    }
 
-  let step = props.step || WEI_STEP;
-  let min = props.min || 0;
+    this.setState({
+      value: properValue,
+    });
+  }
 
-  if (type === 'eth') {
-    type = 'text';
-    value = fromWei(props.value);
+  focus() {
+    this.inputElement && this.inputElement.focus();
+  }
 
-    onChange = e => {
-      const stringValue = e.target.value;
-      if (isNaN(stringValue)) return;
-      const valueWei = new BigNumber(toWei(stringValue));
+  handleWithError(e) {
+    this.setState({
+      value: e.target.value,
+      invalid: true,
+    });
 
-      if (valueWei.lt(1)) return;
-      if (valueWei.lt(min)) return;
-      props.onChange({
+    const event = {...e};
+    event.target = {...event.target, invalid: true};
+    return this.props.onChange && this.props.onChange({
+      target: {
+        name: e.target.name,
+        value: e.target.value,
+        invalid: true,
+      }
+    });
+  }
+
+  onChange(e) {
+    let invalid = false;
+    let stateValue = e.target.value;
+
+    this.setState({
+      value: stateValue,
+      invalid: false,
+    });
+
+    if (this.props.type !== 'eth') {
+      return this.props.onChange && this.props.onChange(e);
+    }
+
+    if (isNaN(stateValue) || stateValue.trim() === '') return this.handleWithError(e);
+    
+    try {
+      let valueWei = new BigNumber(toWei(stateValue));
+      if (valueWei.lt(1)) return this.handleWithError(e);
+      if (valueWei.lt(this.props.min)) return this.handleWithError(e);
+
+      this.props.onChange && this.props.onChange({
         target: {
-          name: props.name,
+          name: this.props.name,
           value: valueWei,
         }
       });
-    }
 
-    onKeyDown = e => {
-      const diff = step.clone();
+    } catch(err) {
+      return this.handleWithError(e);
+    }
+  }
+
+  onKeyDown(e) {
+    if (this.props.type === 'eth') {
+      const diff = WEI_STEP.clone();
       if (e.keyCode === 38) {
         // do nothing
       }else if (e.keyCode === 40) {
@@ -96,43 +132,77 @@ const FormInput = (props) => {
       }else {
         return;
       }
-      const valueWei = props.value.add(diff);
-      if (valueWei.lt(1)) return;
-      if (valueWei.lt(min)) return;
+      let valueWei = this.props.value.add(diff);
+      if (valueWei.lt(this.props.min)) valueWei = this.props.min.clone();
 
-      props.onChange({
+      this.props.onChange && this.props.onChange({
         target: {
-          name: props.name,
+          name: this.props.name,
           value: valueWei,
         }
       });
+
+      this.setState({
+        value: fromWei(valueWei),
+        invalid: false,
+      });
+
+      return;
     }
+    this.props.onKeyDown && this.props.onKeyDown(e); 
   }
 
-  return (
-    <FormGroup>
-      <Label className={className} for={props.name}>{props.label}</Label>
-      <InputGroup>
-        <Input
-          className="withFlyingLabel"
-          autoComplete="off"
-          onChange={onChange}
-          onKeyDown={onKeyDown}
-          value={value}
-          bsSize={props.size || "lg"}
-          type={type || "text"}
-          name={props.name}
-          id={props.name}
-          onFocus={props.onFocus}
-          placeholder={props.placeholder}
-          innerRef={el => inputElement = el}
-          >
-          {props.children}
-        </Input>
-        {append}
-      </InputGroup>
-    </FormGroup>
-  );
+  render () {
+    let append;
+    if (this.props.append) {
+      append = (
+        <InputGroupAddon onClick={this.focus} addonType="append">
+          {this.props.append}
+        </InputGroupAddon>
+      );
+    }else if (this.props.appendIcon) {
+      append = (
+        <InputGroupAddon onClick={this.focus} addonType="append">
+          <span className="input-group-text">
+            <i className={this.props.appendIcon}></i>
+          </span>
+        </InputGroupAddon>
+      );
+    }
+
+    const labelClassName = `flyingLabel ${(this.props.showLabel || this.props.value)?"visible":""}`;
+
+    let type = this.props.type;
+    if (this.props.type === 'eth') type = 'text';
+
+    
+
+    return (
+      <FormGroup className={`${this.state.invalid ? 'is-invalid' : ''}`}>
+        <Label className={labelClassName} for={this.props.name}>{this.props.label}</Label>
+        <InputGroup>
+          <Input
+            className="withFlyingLabel"
+            autoComplete="off"
+            onChange={this.onChange}
+            onKeyDown={this.onKeyDown}
+            value={this.state.value}
+            bsSize={this.props.size || "lg"}
+            type={type || "text"}
+            name={this.props.name}
+            id={this.props.name}
+            onFocus={this.props.onFocus}
+            placeholder={this.props.placeholder}
+            readOnly={this.props.readOnly}
+            innerRef={el => this.inputElement = el}
+            >
+            {this.props.children}
+          </Input>
+          {append}
+        </InputGroup>
+      </FormGroup>
+    );
+  }
 }
 
 class FormDatePicker extends Component {
@@ -142,6 +212,8 @@ class FormDatePicker extends Component {
       moment: this.props.value || moment(),
       showPicker: false,
     }
+
+    this.inputElement = null;
 
     this.onChange = this.onChange.bind(this);
     this.handleSave = this.handleSave.bind(this);
@@ -153,6 +225,9 @@ class FormDatePicker extends Component {
   onChange(moment) {
     if (this.props.onChange) this.props.onChange.call(null, this.state.moment);
     this.setState({ moment });
+    this.inputElement.setState({
+      value: this.value(),
+    });
   };
 
   handleSave() {
@@ -191,6 +266,8 @@ class FormDatePicker extends Component {
             onFocus={this.showPicker}
             label={this.props.label}
             appendIcon="fa fa-calendar"
+            readOnly
+            ref={el => this.inputElement = el}
           />
           <div id="date-picker-container">
             <InputMoment
@@ -262,7 +339,7 @@ class CreateAuction extends Component {
       arguments: args,
     }).send({
       from: data.account,
-      gas: 3000000,
+      gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
     }).on('error', err => {
       console.log(err);
       this.setState({
@@ -311,6 +388,7 @@ class CreateAuctionForm extends Component {
       minimumBid: WEI_STEP.clone(),
       auctionEnd: moment().add(3, 'days').startOf('day'),
       account: accounts[0],
+      isValid: true,
       accounts,
     };
 
@@ -323,8 +401,17 @@ class CreateAuctionForm extends Component {
     const value = target.value;
     const name = target.name;
 
+    if (target.invalid) {
+      this.setState({
+        [name]: '-',
+        isValid: false,
+      });
+      return;
+    }
+
     this.setState({
-      [name]: value
+      [name]: value,
+      isValid: name == 'minimumBid' ? true : this.state.isValid,
     });
   }
 
@@ -360,7 +447,7 @@ class CreateAuctionForm extends Component {
             <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
           </Col></Row>
           <Row><Col>
-            <FormInput showLabel={true} min={WEI_STEP} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" type="eth" onChange={this.onInputChange} value={this.state.minimumBid}/>
+            <FormInput showLabel={true} min={new BigNumber('1')} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" type="eth" onChange={this.onInputChange} value={this.state.minimumBid}/>
           </Col></Row>
           <Row><Col>
             <FormInput showLabel={true} name="account" label="Account" type="select" onChange={this.onInputChange} value={this.state.account}>
@@ -369,7 +456,7 @@ class CreateAuctionForm extends Component {
           </Col></Row>
           <Row><Col>
             <FormGroup className="text-right">
-              <Button id="createAuctionBtn" color="primary">Create Auction</Button>
+              <Button disabled={!this.state.isValid} id="createAuctionBtn" color="primary">Create Auction</Button>
             </FormGroup>
           </Col></Row>
         </Form>
@@ -533,10 +620,11 @@ class ShowAuction extends Component {
     });
 
     try {
-
-      await contract.methods.bid().send({
+      const transaction = contract.methods.bid();
+      await transaction.send({
         from: this.state.auction.account,
         value: bidAmount,
+        gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
       }).on('transactionHash', hash => {
         this.setState({
           loadingText: `Confirming ${hash.substr(0, 10)}`,
@@ -576,7 +664,7 @@ class Auction extends Component {
     
     this.state = {
       now: moment(),
-      bidAmount: this.minimumAcceptableBid(),
+      bidAmount: BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(WEI_STEP)),
     }
 
     this.onInputChange = this.onInputChange.bind(this);
@@ -605,7 +693,7 @@ class Auction extends Component {
   }
 
   minimumAcceptableBid() {
-    return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(WEI_STEP))
+    return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(new BigNumber('1')))
   }
 
   submit(e) {
@@ -617,11 +705,11 @@ class Auction extends Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.auction.highestBid === prevProps.auction.highestBid) return;
-    console.log(this.state.bidAmount, this.props.auction.highestBid);
-    console.log(this.state.bidAmount.toString(), this.props.auction.highestBid.add(WEI_STEP).toString());
+    const bidAmount = BigNumber.max(this.state.bidAmount, this.props.auction.highestBid.add(WEI_STEP));
     this.setState({
-      bidAmount: BigNumber.max(this.state.bidAmount, this.props.auction.highestBid.add(WEI_STEP)),
+      bidAmount,
     });
+    this.ethInput.setValue(bidAmount);
   }
 
   render() {
@@ -670,7 +758,17 @@ class Auction extends Component {
                 <Form onSubmit={this.bid} id="bidForm">
                   <Row>
                     <Col>
-                      <FormInput showLabel={true} name="bidAmount" min={this.minimumAcceptableBid()} label="Amount" placeholder="0.01" type="eth" append="ETH" onChange={this.onInputChange} value={this.state.bidAmount} />
+                      <FormInput showLabel={true}
+                        name="bidAmount"
+                        min={this.minimumAcceptableBid()}
+                        label="Amount"
+                        placeholder="0.01"
+                        type="eth"
+                        append="ETH"
+                        onChange={this.onInputChange}
+                        value={this.state.bidAmount}
+                        ref={el => this.ethInput = el}
+                      />
                     </Col>
                   </Row>
                   <Row>
@@ -731,6 +829,13 @@ class App extends Component {
 
     WEI_STEP = new BigNumber(WEI_STEP);
 
+    const response = await fetch('https://ethgasstation.info/json/ethgasAPI.json');
+    const gasPrices = await response.json();
+
+    window.gasPrice = gasPrices.safeLowWait;
+
+    console.log(gasPrices);
+    
     this.setState({
       loaded: true,
     });
