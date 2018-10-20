@@ -324,14 +324,17 @@ class CreateAuction extends Component {
       loadingText: 'Deploying Contract'
     });
 
-    const contract = new web3.eth.Contract(smartContract.API);
+    const contract = new web3.eth.Contract(smartContract.ABI);
     const args = [
       data.title,
       data.auctionEnd.unix().toString(),
       data.account,
       data.description,
       data.minimumBid.toString(),
+      data.listed,
+      data.escrowEnabled,
     ];
+
     console.log("Deploy contract", args);
 
     contract.deploy({
@@ -389,6 +392,8 @@ class CreateAuctionForm extends Component {
       auctionEnd: moment().add(3, 'days').startOf('day'),
       account: accounts[0],
       isValid: true,
+      listed: true,
+      escrowEnabled: true,
       accounts,
     };
 
@@ -398,7 +403,7 @@ class CreateAuctionForm extends Component {
   }
 
   onInputChange({target}) {
-    const value = target.value;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
     if (target.invalid) {
@@ -427,6 +432,8 @@ class CreateAuctionForm extends Component {
       minimumBid: this.state.minimumBid,
       auctionEnd: this.state.auctionEnd,
       account: this.state.account,
+      listed: this.state.listed,
+      escrowEnabled: this.state.escrowEnabled,
     });
   }
 
@@ -454,6 +461,24 @@ class CreateAuctionForm extends Component {
               {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
             </FormInput>
           </Col></Row>
+          <Row className="mt-2">
+            <Col xs={6}>
+              <FormGroup check>
+                <Label check>
+                  <Input onChange={this.onInputChange} checked={this.state.listed} name="listed" type="checkbox" />{' '}
+                  Listed
+                </Label>
+              </FormGroup>
+            </Col>
+            <Col xs={6}>
+              <FormGroup check>
+                <Label check>
+                  <Input onChange={this.onInputChange} checked={this.state.escrowEnabled} name="escrowEnabled" type="checkbox" />{' '}
+                  Enable escrow
+                </Label>
+              </FormGroup>
+            </Col>
+          </Row>
           <Row className="mt-3"><Col>
             <FormGroup className="text-right">
               <Button disabled={!this.state.isValid} id="createAuctionBtn" color="primary">Create Auction</Button>
@@ -587,7 +612,7 @@ class ShowAuction extends Component {
   }
 
   async componentDidMount() {
-    const contract = new readOnlyWeb3.eth.Contract(smartContract.API, this.props.match.params.address);
+    const contract = new readOnlyWeb3.eth.Contract(smartContract.ABI, this.props.match.params.address);
     window.contract = contract;
 
     const auction = {
@@ -622,7 +647,7 @@ class ShowAuction extends Component {
   }
 
   async bid({bidAmount}) {
-    const contract = new web3.eth.Contract(smartContract.API, this.props.match.params.address);
+    const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
 
     this.setState({
       loading: true,
