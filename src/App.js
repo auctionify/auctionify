@@ -323,7 +323,7 @@ const Auctionify = props => {
           <h1>Auctionify</h1>
         </Col>
         <Col>
-          <p>101</p>
+          <p>102</p>
           {menu}
         </Col>
       </div>
