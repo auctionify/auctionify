@@ -20,8 +20,9 @@ import {
   InputGroup,
   Badge,
   FormGroup,
+  ListGroup,
 } from 'reactstrap';
-import { HashRouter, Route, withRouter} from 'react-router-dom'
+import { HashRouter, Route, withRouter, Link} from 'react-router-dom'
 
 import {getWeb3} from './web3';
 import smartContract from '@auctionify/smart-contract'
@@ -36,6 +37,23 @@ let web3,
     toWei,
     accounts = [],
     WEI_STEP = '10000000000000000';
+
+class AuctionStorage {
+  static add(transaction) {
+    const all = this.get();
+    all.push(transaction);
+    window.localStorage.setItem('transactions', JSON.stringify(all));
+  }
+
+  static get() {
+    return JSON.parse(window.localStorage.getItem('transactions') || '[]');
+  }
+
+  static remove(transaction) {
+    const all = this.get();
+    window.localStorage.setItem('transactions', JSON.stringify(all.filter(h => h !== transaction)));
+  }
+}
 
 class FormInput extends Component {
   constructor(props) {
@@ -286,7 +304,15 @@ class FormDatePicker extends Component {
     );
   }
 }
-const Auctionify = () => {
+const Auctionify = props => {
+  let menu = '';
+
+  if (props.linkTo === 'my-auctions') {
+    menu = <Link className="btn btn-primary btn-sm" id="menu-btn" to="/my-auctions">My Auctions</Link>
+  } else if (props.linkTo === 'create-auction') {
+    menu = <Link className="btn btn-primary btn-sm" id="menu-btn" to="/">Create Auction</Link>
+  }
+
   return (
     <Row className="brand justify-content-center">
       <div className="text-center align-self-center mt-5">
@@ -298,6 +324,7 @@ const Auctionify = () => {
         </Col>
         <Col>
           <p>101</p>
+          {menu}
         </Col>
       </div>
     </Row>
@@ -346,6 +373,8 @@ class CreateAuction extends Component {
         loading: false,
       });
     }).on('transactionHash', transactionHash => {
+      AuctionStorage.add(transactionHash);
+      
       this.setState({
         loadingText: `Confirming ${transactionHash.substr(0, 10)}`,
       });
@@ -366,10 +395,10 @@ class CreateAuction extends Component {
     return (
       <LoadingOverlay background="rgba(255,255,255,.8)" color="#F60" active={this.state.loading} spinner text={this.state.loadingText}>
         <Row className="m-0">
-          <Col lg="5" className="accent-bg">
-            <Auctionify />
+          <Col lg={5} className="accent-bg">
+            <Auctionify linkTo='my-auctions' />
           </Col>
-          <Col className="py-4">
+          <Col lg={7} className="py-4">
             <CreateAuctionForm onSubmit={this.createAuction} />
           </Col>
         </Row>
@@ -964,6 +993,121 @@ const Footer = () => {
   );
 }
 
+class AuctionListItem extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      loading: true,
+      contractAddress: '',
+    }
+
+    this.remove = this.remove.bind(this);
+  }
+
+  async getContractAddr() {
+    let receipt = null;
+    while (!receipt) {
+      receipt = await readOnlyWeb3.eth.getTransactionReceipt(this.props.hash);
+      if (!receipt) await new Promise(acc => setTimeout(acc, 1000));
+    }
+    return receipt.contractAddress;
+  }
+
+  async componentDidMount() {
+    const contractAddress = await this.getContractAddr();
+    this.setState({
+      contractAddress,
+      loading: false,
+    });
+  }
+
+  remove(e) {
+    e.preventDefault();
+    this.props.remove(this.props.hash)
+  }
+
+  render() {
+    let contractAddress = <Fragment><i className="fa fa-spinner fa-pulse"></i></Fragment>;
+    if (!this.state.loading) {
+      contractAddress = (<Link to={`/auction/${this.state.contractAddress}`}><code>{this.props.hash.substr(0, 10)}</code></Link>);
+    }
+    return (
+      <li className="list-group-item container">
+        <Row>
+          <Col md={5}>
+            <Badge className="list-label">Transaction</Badge>&nbsp;
+            <a target="_blank" rel="noopener noreferrer" href={`https://ropsten.etherscan.io/tx/${this.props.hash}`}>
+              <code>{this.props.hash.substr(0, 10)}</code> <i className="fa fa-external-link"></i>
+            </a>
+          </Col>
+          <Col md={6}>
+            <Badge className="list-label">Contract</Badge> {contractAddress}
+          </Col>
+          <div className="remove">
+            <a onClick={this.remove}><i className="fa fa-window-close"></i></a>
+          </div>
+        </Row>
+      </li>
+    );
+  }
+}
+
+class AuctionsList extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      list: AuctionStorage.get(),
+    }
+
+    this.remove = this.remove.bind(this);
+  }
+
+  remove(transaction) {
+    AuctionStorage.remove(transaction);
+    this.setState({
+      list: AuctionStorage.get(),
+    });
+  }
+
+  render () {
+    return (
+      <Container>
+        <Row><Col><h3 className="title">My Auctions</h3></Col></Row>
+        <Row>
+          <ListGroup flush className="w-100 auctions-list">
+            {this.state.list.map((hash, key) => {
+              return (
+                <AuctionListItem key={key} hash={hash} remove={this.remove} />
+              );
+            })}
+          </ListGroup>
+        </Row>
+      </Container>
+    );
+  }
+}
+
+class MyAuctions extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return (
+      <Row className="m-0">
+        <Col lg={5} className="accent-bg">
+          <Auctionify linkTo='create-auction' />
+        </Col>
+        <Col lg={7} className="py-4">
+          <AuctionsList />
+        </Col>
+      </Row>
+    );
+  }
+}
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -1014,6 +1158,7 @@ class App extends Component {
           <Container className="main">
             <Route path="/" exact={true} component={withRouter(CreateAuction)} />
             <Route path="/auction/:address" component={withRouter(ShowAuction)} />
+            <Route path="/my-auctions/" component={withRouter(MyAuctions)} />
             <Footer />
           </Container>
         </Container>

@@ -136,7 +136,7 @@ label.flyingLabel {
   color: gray;
   font-size: 14px;
 }
-#createAuctionBtn, #bid, #fin {
+#createAuctionBtn, #bid, #fin, #menu-btn {
   padding: 6px 25px;
 
   background-color: lighten($accent, 10%);
@@ -301,4 +301,28 @@ div.countdown {
 
 div[class^="sc"] {
   text-transform: uppercase;
+}
+
+.auctions-list {
+  .list-label {
+    width: 70px;
+  }
+  min-height: 300px;
+
+  .fa {
+    position: relative;
+    top: 2px;
+  }
+
+  .remove {
+    position: absolute;
+    right: 0;
+    & a {
+      color: $accent;
+      cursor: pointer;
+      &:hover {
+        color: red;
+      }
+    }
+  }
 }
