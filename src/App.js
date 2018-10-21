@@ -2,7 +2,7 @@ import React, { Component, Fragment } from 'react';
 import moment from 'moment';
 import InputMoment from 'input-moment';
 import LoadingOverlay from 'react-loading-overlay';
-import auctionIcon from './images/auction.svg';
+import auctionIcon from './images/auctionify.png';
 import ClickOutside from 'react-click-outside';
 import 'input-moment/dist/input-moment.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -91,7 +91,6 @@ class FormInput extends Component {
   }
 
   onChange(e) {
-    let invalid = false;
     let stateValue = e.target.value;
 
     this.setState({
@@ -292,7 +291,7 @@ const Auctionify = () => {
     <Row className="brand justify-content-center">
       <div className="text-center align-self-center mt-5">
         <Col>
-          <img src={auctionIcon} alt="auction logo" />
+          <img src={auctionIcon} width="100%" alt="auction logo" />
         </Col>
         <Col xl>
           <h1>Auctionify</h1>
@@ -310,10 +309,6 @@ class CreateAuction extends Component {
     this.state = {
       loading: false,
       loadingText: '',
-      title: '',
-      description: '',
-      minimumBid: WEI_STEP.clone(),
-      auctionEnd: moment().add(3, 'days').startOf('day'),
     };
 
     this.createAuction = this.createAuction.bind(this);
@@ -344,6 +339,7 @@ class CreateAuction extends Component {
     }).send({
       from: data.account,
       gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
+      gas: window.gas,
     }).on('error', err => {
       console.log(err);
       this.setState({
@@ -417,7 +413,7 @@ class CreateAuctionForm extends Component {
 
     this.setState({
       [name]: value,
-      isValid: name == 'minimumBid' ? true : this.state.isValid,
+      isValid: name === 'minimumBid' ? true : this.state.isValid,
     });
   }
 
@@ -491,39 +487,71 @@ class CreateAuctionForm extends Component {
   }
 }
 
-const CountDown = props => {
-  if (!props.to || !props.now) return <div></div>;
-  const duration = moment.duration(props.to-props.now);
-  const pad = n => (""+n).padStart(2, '0');
-  return (
-    <div className="countdown">
-      <div className="section">
-        <span className="time">{pad(Math.floor(duration.asDays()))}</span><br />
-        <span className="label">days</span>
-      </div>
+class CountDown extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      now: moment(),
+    }
+  }
 
-      <div className="section"><span className="separater">:</span><br />&nbsp;</div>
-      
-      <div className="section">
-        <span className="time">{pad(duration.hours())}</span><br />
-        <span className="label">hours</span>
-      </div>
+  isFinished() {
+    return moment().diff(this.props.to) >= 0;
+  }
 
-      <div className="section"><span className="separater">:</span><br />&nbsp;</div>
-      
-      <div className="section">
-        <span className="time">{pad(duration.minutes())}</span><br />
-        <span className="label">minutes</span>
-      </div>
+  componentDidMount() {
+    this.intervalId = setInterval(() => {
+      this.setState({
+        now: moment(),
+      });
+      if (this.isFinished()) {
+        this.props.onFinished();
+      }
+    }, 1000);
+  }
 
-      <div className="section"><span className="separater">:</span><br />&nbsp;</div>
-      
-      <div className="section">
-        <span className="time">{pad(duration.seconds())}</span><br />
-        <span className="label">seconds</span>
-      </div>
-    </div>
-  );
+  componentWillUnmount() {
+    clearInterval(this.intervalId);
+  }
+
+  render() {
+    if (!this.props.to || this.isFinished()) return <div></div>;
+    const duration = moment.duration(this.props.to-this.state.now);
+    const pad = n => (""+n).padStart(2, '0');
+    return (
+      <Row>
+        <Col className="text-center p-0">
+          <div className="countdown">
+            <div className="section">
+              <span className="time">{pad(Math.floor(duration.asDays()))}</span><br />
+              <span className="label">days</span>
+            </div>
+
+            <div className="section"><span className="separater">:</span><br />&nbsp;</div>
+            
+            <div className="section">
+              <span className="time">{pad(duration.hours())}</span><br />
+              <span className="label">hours</span>
+            </div>
+
+            <div className="section"><span className="separater">:</span><br />&nbsp;</div>
+            
+            <div className="section">
+              <span className="time">{pad(duration.minutes())}</span><br />
+              <span className="label">minutes</span>
+            </div>
+
+            <div className="section"><span className="separater">:</span><br />&nbsp;</div>
+            
+            <div className="section">
+              <span className="time">{pad(duration.seconds())}</span><br />
+              <span className="label">seconds</span>
+            </div>
+          </div>
+        </Col>
+      </Row>
+    );
+  }
 }
 
 const WinningNotice = props => {
@@ -531,12 +559,13 @@ const WinningNotice = props => {
     return (
       <div>
         <i className="fa fa-trophy"></i>
-        You are the highest bidder!
+        &nbsp; You are the highest bidder!
       </div>
     );
   }
   return '';
 }
+
 class HighestBid extends Component {
   constructor(props) {
     super(props);
@@ -545,6 +574,7 @@ class HighestBid extends Component {
       }
     }
   }
+
   componentDidMount() {
     this.resize();
   }
@@ -610,6 +640,7 @@ class ShowAuction extends Component {
     }
 
     this.bid = this.bid.bind(this);
+    this.finalize = this.finalize.bind(this);
   }
 
   async componentDidMount() {
@@ -626,7 +657,7 @@ class ShowAuction extends Component {
     }
 
     const deadline = await contract.methods.auctionEnd().call();
-    auction.auctionEnd = moment(deadline*1000);
+    auction.auctionEnd = moment(deadline*1000);//.add(-3, 'day');
 
     this.setState({
       auction,
@@ -647,6 +678,44 @@ class ShowAuction extends Component {
     });
   }
 
+  async finalize() {
+    const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
+
+    this.setState({
+      loading: true,
+      loadingText: 'Sending Transaction',
+    });
+
+    try {
+      const transaction = contract.methods.endAuction();
+      await transaction.send({
+        from: this.state.auction.account,
+        gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
+        gas: window.gas,
+      }).on('transactionHash', hash => {
+        this.setState({
+          loadingText: `Confirming ${hash.substr(0, 10)}`,
+        });
+      }).on('error', err => {
+        this.setState({
+          loading: false
+        });
+      });
+      this.setState({
+        loading: false
+      });
+    } catch (e) {
+      this.setState({
+        loading: false
+      });
+    }
+
+    this.setState({
+      loading: true,
+      loadingText: 'Sending Transaction',
+    });
+  };
+
   async bid({bidAmount}) {
     const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
 
@@ -661,6 +730,7 @@ class ShowAuction extends Component {
         from: this.state.auction.account,
         value: bidAmount,
         gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
+        gas: window.gas,
       }).on('transactionHash', hash => {
         this.setState({
           loadingText: `Confirming ${hash.substr(0, 10)}`,
@@ -684,7 +754,7 @@ class ShowAuction extends Component {
   render() {
     let auction = (<div className="accent-bg auction-placeholder"><span></span></div>);
     if (this.state.auction) {
-      auction = (<Auction auction={this.state.auction} onBid={this.bid} />);
+      auction = (<Auction auction={this.state.auction} onBid={this.bid} onFinalized={this.finalize} />);
     }
     return (
       <LoadingOverlay background="rgba(255,255,255,.7)" color="#F60" active={this.state.loading} spinner text={this.state.loadingText}>
@@ -694,49 +764,59 @@ class ShowAuction extends Component {
   }
 }
 
-class Auction extends Component {
+const AuctionEndStatus = props => {
+  if (!props.show) return '';
+
+  let label = 'Auction has ended';
+  if (props.highestBidder === '0x0000000000000000000000000000000000000000') {
+    label += ' without a winner'
+  }
+
+  return (
+    <Row>
+      <Col className="text-center p-0">
+        <span><i className="fa fa-calendar-times-o"></i> {label}</span>
+      </Col>
+    </Row>
+  );
+}
+
+const FinalizeAuction = props => {
+  if (!props.show) return '';
+
+  if (props.auction.account !== props.auction.highestBidder) {
+    return '';
+  }
+
+  return (
+    <Row className="bid-container">
+      <Col><Form><Row className="mt-2">
+        <Col
+          className="text-center"
+          sm={{size: 8, offset: 2}}
+          md={{size: 6, offset: 3}}
+          lg={{size: 4, offset: 4}}
+          >
+          <Button id="fin" block color="primary" onClick={props.onClick}>Finalize Auction</Button>
+        </Col>
+        <Col xs={12} className="text-center mt-2 finalize-notice">
+           <i className="fa fa-info-circle"></i> Finalizing the auction transfers the money to the beneficiary!
+        </Col>
+      </Row>
+    </Form></Col></Row>
+  )
+}
+
+class BidAuction extends Component {
   constructor(props) {
     super(props);
-    
+
     this.state = {
-      now: moment(),
       bidAmount: BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(WEI_STEP)),
     }
 
     this.onInputChange = this.onInputChange.bind(this);
-    this.submit = this.submit.bind(this);
-  }
-
-  onInputChange({target}) {
-    const value = target.value;
-    const name = target.name;
-
-    this.setState({
-      [name]: value
-    });
-  }
-
-  componentDidMount() {
-    this.intervalId = setInterval(() => {
-      this.setState({
-        now: moment(),
-      });
-    }, 1000);
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.intervalId);
-  }
-
-  minimumAcceptableBid() {
-    return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(new BigNumber('1')))
-  }
-
-  submit(e) {
-    e.preventDefault();
-    this.props.onBid({
-      bidAmount: this.state.bidAmount,
-    });
+    this.bid = this.bid.bind(this);
   }
 
   componentDidUpdate(prevProps) {
@@ -748,18 +828,97 @@ class Auction extends Component {
     this.ethInput.setValue(bidAmount);
   }
 
+  onInputChange({target}) {
+    const value = target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  }
+
+  minimumAcceptableBid() {
+    return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(new BigNumber('1')))
+  }
+
+  bid(e) {
+    e.preventDefault();
+    this.props.onBid({
+      bidAmount: this.state.bidAmount,
+    })
+  }
+
+  render() {
+    if (!this.props.show) return '';
+
+    return (
+      <Row className="bid-container">
+        <Col
+          sm={{size: 8, offset: 2}}
+          md={{size: 6, offset: 3}}
+          lg={{size: 4, offset: 4}} >
+          <Form onSubmit={this.bid} id="bidForm">
+            <Row>
+              <Col>
+                <FormInput showLabel={true}
+                  name="bidAmount"
+                  min={this.minimumAcceptableBid()}
+                  label="Amount"
+                  placeholder="0.01"
+                  type="eth"
+                  append="ETH"
+                  onChange={this.onInputChange}
+                  value={this.state.bidAmount}
+                  ref={el => this.ethInput = el}
+                />
+              </Col>
+            </Row>
+            <Row className="mt-2">
+              <Col sm={{size: 4, order:2}} className="text-right">
+                <Button id="bid" block color="primary" onClick={this.bid}>Bid</Button>
+              </Col>
+              <Col order={1} className="text-center text-sm-left mt-2 winner-notice">
+                 <WinningNotice bidder={this.props.auction.highestBidder} account={this.props.auction.account} />
+              </Col>
+            </Row>
+          </Form>
+        </Col>
+      </Row>
+    );
+  }
+}
+
+class Auction extends Component {
+  constructor(props) {
+    super(props);
+    
+    this.state = {
+      finished: this.isFinished(),
+    }
+
+    this.finalize = this.finalize.bind(this);
+    this.onFinished = this.onFinished.bind(this);
+  }
+
+  finalize(e) {
+    e.preventDefault();
+    this.props.onFinalized();
+  }
+
+  isFinished() {
+    return moment().diff(this.props.auction.auctionEnd) >= 0;
+  }
+
+  onFinished() {
+    this.setState({
+      finished: true,
+    });
+  }
+
   render() {
     const {auction} = this.props;
     if (!auction) {
       return '';
-    }
-
-    let highestBidComponent = '';
-
-    if (!auction.highestBid.isZero()) {
-      highestBidComponent = (
-        <HighestBid bid={auction.highestBid} bidder={auction.highestBidder} account={auction.account} />
-      )
     }
 
     return (
@@ -771,13 +930,10 @@ class Auction extends Component {
             </Col>
           </Row>
           <Row>
-            {highestBidComponent}
+            <HighestBid bid={auction.highestBid} bidder={auction.highestBidder} account={auction.account} />
           </Row>
-          <Row>
-            <Col className="text-center p-0">
-              <CountDown now={this.state.now} to={auction.auctionEnd} />
-            </Col>
-          </Row>
+          <CountDown onFinished={this.onFinished} to={auction.auctionEnd} />
+          <AuctionEndStatus show={this.state.finished} highestBidder={auction.highestBidder} />
         </Col>
         <Col className="py-4">
           <Container>
@@ -786,38 +942,8 @@ class Auction extends Component {
                 return <Fragment key={key}>{line}<br /></Fragment>;
               })}</p>
             </Col></Row>
-            <Row className="bid-container">
-              <Col
-                sm={{size: 8, offset: 2}}
-                md={{size: 6, offset: 3}}
-                lg={{size: 4, offset: 4}} >
-                <Form onSubmit={this.bid} id="bidForm">
-                  <Row>
-                    <Col>
-                      <FormInput showLabel={true}
-                        name="bidAmount"
-                        min={this.minimumAcceptableBid()}
-                        label="Amount"
-                        placeholder="0.01"
-                        type="eth"
-                        append="ETH"
-                        onChange={this.onInputChange}
-                        value={this.state.bidAmount}
-                        ref={el => this.ethInput = el}
-                      />
-                    </Col>
-                  </Row>
-                  <Row className="mt-2">
-                    <Col sm={{size: 4, order:2}} className="text-right">
-                      <Button id="bid" block color="primary" onClick={this.submit}>Bid</Button>
-                    </Col>
-                    <Col order={1} className="text-center text-sm-left mt-2 winner-notice">
-                       <WinningNotice bidder={auction.highestBidder} account={auction.account} />
-                    </Col>
-                  </Row>
-                </Form>
-              </Col>
-            </Row>
+            <FinalizeAuction onClick={this.finalize} show={this.state.finished} auction={auction} />
+            <BidAuction show={!this.state.finished} onBid={this.props.onBid} auction={auction} />
           </Container>
         </Col>
       </Row>
@@ -871,8 +997,8 @@ class App extends Component {
     const response = await fetch('https://ethgasstation.info/json/ethgasAPI.json');
     const gasPrices = await response.json();
 
-    window.gasPrice = gasPrices.safeLowWait;
-
+    window.gasPrice = gasPrices.average;
+    window.gas = 1500000;
     console.log(gasPrices);
     
     this.setState({
