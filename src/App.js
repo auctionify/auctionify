@@ -608,6 +608,11 @@ class HighestBid extends Component {
     this.resize();
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.bid === prevProps.bid) return;
+    this.resize();
+  }
+
   resize() {
     if (!this.containerEl) return;
 
