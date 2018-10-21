@@ -1030,7 +1030,7 @@ class AuctionListItem extends Component {
   render() {
     let contractAddress = <Fragment><i className="fa fa-spinner fa-pulse"></i></Fragment>;
     if (!this.state.loading) {
-      contractAddress = (<Link to={`/auction/${this.state.contractAddress}`}><code>{this.props.hash.substr(0, 10)}</code></Link>);
+      contractAddress = (<Link to={`/auction/${this.state.contractAddress}`}><code>{this.state.contractAddress.substr(0, 10)}</code></Link>);
     }
     return (
       <li className="list-group-item container">
