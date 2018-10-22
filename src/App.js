@@ -39,19 +39,32 @@ let web3,
     WEI_STEP = '10000000000000000';
 
 class AuctionStorage {
-  static add(transaction) {
-    const all = this.get();
-    all.push(transaction);
-    window.localStorage.setItem('transactions', JSON.stringify(all));
+  static add(item) {
+    const all = this.all();
+    all.push(item);
+    window.localStorage.setItem('faves', JSON.stringify(all));
   }
 
-  static get() {
-    return JSON.parse(window.localStorage.getItem('transactions') || '[]');
+  static all() {
+    return JSON.parse(window.localStorage.getItem('faves') || '[]');
   }
 
-  static remove(transaction) {
-    const all = this.get();
-    window.localStorage.setItem('transactions', JSON.stringify(all.filter(h => h !== transaction)));
+  static remove(fn) {
+    const all = this.all();
+    window.localStorage.setItem('faves', JSON.stringify(all.filter(i => !fn(i))));
+  }
+
+  static replace(fn, item) {
+    let all = this.all();
+    let index = all.findIndex(fn);
+    if (index === -1) return false;
+    all[index] = item;
+    window.localStorage.setItem('faves', JSON.stringify(all));  
+    return true;
+  }
+
+  static exists(fn) {
+    return this.all().some(fn);
   }
 }
 
@@ -323,7 +336,7 @@ const Auctionify = props => {
           <h1>Auctionify</h1>
         </Col>
         <Col>
-          <p>102</p>
+          <p>103</p>
           {menu}
         </Col>
       </div>
@@ -373,7 +386,11 @@ class CreateAuction extends Component {
         loading: false,
       });
     }).on('transactionHash', transactionHash => {
-      AuctionStorage.add(transactionHash);
+      AuctionStorage.add({
+        mine: true,
+        title: data.title,
+        transactionHash,
+      });
       
       this.setState({
         loadingText: `Confirming ${transactionHash.substr(0, 10)}`,
@@ -682,6 +699,7 @@ class ShowAuction extends Component {
     window.contract = contract;
 
     const auction = {
+      address: this.props.match.params.address,
       account: accounts[0],
       title: await contract.methods.auctionTitle().call(),
       description: await contract.methods.auctionDescription().call(),
@@ -759,6 +777,7 @@ class ShowAuction extends Component {
     });
 
     try {
+
       const transaction = contract.methods.bid();
       await transaction.send({
         from: this.state.auction.account,
@@ -922,16 +941,32 @@ class BidAuction extends Component {
   }
 }
 
+const FavoriteStar = props => {
+  const className = props.faved ? 'fa-star' : 'fa-star-o';
+  const onToggle = e => {
+    e.preventDefault();
+    props.onToggle(!props.faved);
+  }
+  return (
+    <div onClick={onToggle} className="fav-star">
+      <i className={`icon fa ${className}`}></i>
+    </div>
+  );
+}
+
 class Auction extends Component {
   constructor(props) {
     super(props);
     
     this.state = {
       finished: this.isFinished(),
+      faved: AuctionStorage.exists(i => i.contractAddress === this.props.auction.address),
     }
-
+    
+    this.onBid = this.onBid.bind(this);
     this.finalize = this.finalize.bind(this);
     this.onFinished = this.onFinished.bind(this);
+    this.onToggleFav = this.onToggleFav.bind(this);
   }
 
   finalize(e) {
@@ -949,6 +984,28 @@ class Auction extends Component {
     });
   }
 
+  onToggleFav(faved) {
+    this.setState({
+      faved,
+    });
+
+    if (faved) {
+      AuctionStorage.add({
+        contractAddress: this.props.auction.address,
+        title: this.props.auction.title,
+      });
+    }else {
+      AuctionStorage.remove(i => i.contractAddress === this.props.auction.address);
+    }
+  }
+
+  onBid(e) {
+    if (!this.state.faved) {
+      this.onToggleFav(true);
+    }
+    this.props.onBid(e);
+  }
+
   render() {
     const {auction} = this.props;
     if (!auction) {
@@ -961,6 +1018,7 @@ class Auction extends Component {
           <Row>
             <Col>
               <h1 id="auction-title">{auction.title}</h1>
+              <FavoriteStar faved={this.state.faved} onToggle={this.onToggleFav} />
             </Col>
           </Row>
           <Row>
@@ -977,7 +1035,7 @@ class Auction extends Component {
               })}</p>
             </Col></Row>
             <FinalizeAuction onClick={this.finalize} show={this.state.finished} auction={auction} />
-            <BidAuction show={!this.state.finished} onBid={this.props.onBid} auction={auction} />
+            <BidAuction show={!this.state.finished} onBid={this.onBid} auction={auction} />
           </Container>
         </Col>
       </Row>
@@ -1002,56 +1060,47 @@ class AuctionListItem extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      loading: true,
-      contractAddress: '',
-    }
-
     this.remove = this.remove.bind(this);
   }
 
-  async getContractAddr() {
-    let receipt = null;
-    while (!receipt) {
-      receipt = await readOnlyWeb3.eth.getTransactionReceipt(this.props.hash);
-      if (!receipt) await new Promise(acc => setTimeout(acc, 1000));
-    }
-    return receipt.contractAddress;
-  }
-
-  async componentDidMount() {
-    const contractAddress = await this.getContractAddr();
-    this.setState({
-      contractAddress,
-      loading: false,
-    });
-  }
 
   remove(e) {
     e.preventDefault();
-    this.props.remove(this.props.hash)
+    this.props.remove(this.props.detail)
   }
 
   render() {
-    let contractAddress = <Fragment><i className="fa fa-spinner fa-pulse"></i></Fragment>;
-    if (!this.state.loading) {
-      contractAddress = (<Link to={`/auction/${this.state.contractAddress}`}><code>{this.state.contractAddress.substr(0, 10)}</code></Link>);
+    const detail = this.props.detail;
+
+    detail.transactionHash = detail.transactionHash || '-';
+    detail.title = detail.title.trim() || '[ Untitled ]';
+    
+    let contractAddress = (
+      <Fragment>
+        <i className="fa fa-spinner fa-pulse"></i>
+        &nbsp;
+        <a target="_blank" rel="noopener noreferrer" href={`https://ropsten.etherscan.io/tx/${detail.transactionHash}`}>
+          <code>{detail.transactionHash.toUpperCase().substr(0, 10)}</code> <i className="fa fa-external-link"></i>
+        </a>
+      </Fragment>
+    );
+
+    if (detail.contractAddress) {
+      contractAddress = (
+        <Fragment>
+          <Link className="to-auction" to={`/auction/${detail.contractAddress}`}><code>{detail.contractAddress.toUpperCase().substr(0, 10)}</code></Link>
+        </Fragment>
+      );
     }
     return (
       <li className="list-group-item container">
         <Row>
-          <Col md={5}>
-            <Badge className="list-label">Transaction</Badge>&nbsp;
-            <a target="_blank" rel="noopener noreferrer" href={`https://ropsten.etherscan.io/tx/${this.props.hash}`}>
-              <code>{this.props.hash.substr(0, 10)}</code> <i className="fa fa-external-link"></i>
-            </a>
+          <Col md={8}>
+            <i className="fa fa-star golden"></i> {detail.title}
           </Col>
-          <Col md={6}>
-            <Badge className="list-label">Contract</Badge> {contractAddress}
+          <Col md={4} className="text-left text-md-right addr">
+            {contractAddress}
           </Col>
-          <div className="remove">
-            <a onClick={this.remove}><i className="fa fa-window-close"></i></a>
-          </div>
         </Row>
       </li>
     );
@@ -1063,16 +1112,30 @@ class AuctionsList extends Component {
     super(props);
 
     this.state = {
-      list: AuctionStorage.get(),
+      list: AuctionStorage.all(),
     }
-
-    this.remove = this.remove.bind(this);
   }
 
-  remove(transaction) {
-    AuctionStorage.remove(transaction);
-    this.setState({
-      list: AuctionStorage.get(),
+  async getContractAddr(transactionHash) {
+    let receipt = null;
+    while (!receipt) {
+      receipt = await readOnlyWeb3.eth.getTransactionReceipt(transactionHash);
+      if (!receipt) await new Promise(acc => setTimeout(acc, 1000));
+    }
+    return receipt.contractAddress;
+  }
+
+  componentDidMount() {
+    this.state.list.forEach(async item => {
+      if (item.contractAddress) return;
+      const contractAddress = await this.getContractAddr(item.transactionHash);
+      item.contractAddress = contractAddress;
+
+      AuctionStorage.replace(i => i.transactionHash === item.transactionHash, item);
+
+      this.setState({
+        list: [...this.state.list],
+      });
     });
   }
 
@@ -1082,9 +1145,9 @@ class AuctionsList extends Component {
         <Row><Col><h3 className="title">My Auctions</h3></Col></Row>
         <Row>
           <ListGroup flush className="w-100 auctions-list">
-            {this.state.list.map((hash, key) => {
+            {this.state.list.map((auctionDetail, key) => {
               return (
-                <AuctionListItem key={key} hash={hash} remove={this.remove} />
+                <AuctionListItem key={key} detail={auctionDetail} />
               );
             })}
           </ListGroup>
