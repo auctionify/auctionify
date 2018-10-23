@@ -336,7 +336,7 @@ const Auctionify = props => {
         </Col>
         <Col xl>
           <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
-          <div className='version'>v0.0.1</div>
+          <div className='version'>v0.2.1</div>
           {menu}
         </Col>
       </div>
@@ -379,7 +379,7 @@ class CreateAuction extends Component {
     }).send({
       from: data.account,
       gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
-      gas: window.gas
+      gas: window.gas * 2
     }).on('error', err => {
       console.log(err);
       this.setState({
@@ -744,7 +744,7 @@ class ShowAuction extends Component {
       await transaction.send({
         from: this.state.auction.account,
         gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
-        gas: window.gas
+        gas: window.gas / 5
       }).on('transactionHash', hash => {
         this.setState({
           loadingText: `Confirming ${hash.substr(0, 10)}`
@@ -783,7 +783,7 @@ class ShowAuction extends Component {
         from: this.state.auction.account,
         value: bidAmount,
         gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
-        gas: window.gas
+        gas: window.gas / 5
       }).on('transactionHash', hash => {
         this.setState({
           loadingText: `Confirming ${hash.substr(0, 10)}`
@@ -841,7 +841,7 @@ const AuctionEndStatus = props => {
 const FinalizeAuction = props => {
   if (!props.show) return '';
 
-  if (props.auction.auctionState == 2) {
+  if (props.auction.auctionState == 2) { // for === maybe bigNum?
     // TODO: show button to call cleanUpAfterYourself() to everyone
     return '';
   }
@@ -1039,7 +1039,7 @@ class Auction extends Component {
         <Col lg='12' className='accent-bg auction-header container'>
           <Row>
             <Col>
-              <a target='_blank' rel='noopener noreferrer' href={`https://${networkSubdomain}etherscan.io/address/${this.props.auction.address}`}> <i class='far fa-fingerprint' /></a>
+              <a target='_blank' rel='noopener noreferrer' href={`https://${networkSubdomain}etherscan.io/address/${this.props.auction.address}`}> <i className='far fa-fingerprint' /></a>
               <h1 id='auction-title'> {auction.title}</h1>
               <FavoriteStar faved={this.state.faved} onToggle={this.onToggleFav} />
             </Col>
@@ -1071,11 +1071,11 @@ const Footer = () => {
     <Container className='footer'>
       <Row noGutters>
         <Col lg={{size: 6, order: 2}} className='text-center text-lg-right'>
-          <a target='_blank' href='https://github.com/auctionify'><i className='fab fa-github' /> Auctionify </a>
+          <a target='_blank' rel='noopener noreferrer' href='https://github.com/auctionify'><i className='fab fa-github' /> Auctionify </a>
            | Made with <i className='fa fa-heart' /> in Montréal
         </Col>
         <Col lg={{size: 6, order: 1}} className='text-center text-lg-left'>
-          <a target='_blank' href='https://etherscan.io/address/auctionify.eth'><i className='fab fa-ethereum' /> Auctionify.eth </a>
+          <a target='_blank' rel='noopener noreferrer' href='https://etherscan.io/address/auctionify.eth'><i className='fab fa-ethereum' /> Auctionify.eth </a>
         </Col>
       </Row>
     </Container>
@@ -1237,8 +1237,8 @@ class App extends Component {
     const response = await fetch('https://ethgasstation.info/json/ethgasAPI.json');
     const gasPrices = await response.json();
 
-    window.gasPrice = gasPrices.average;
-    window.gas = 1000000; // max gas included. this must be replaced with estimateGas()
+    window.gasPrice = (gasPrices.average / 10) + 10; // Some price optimization
+    window.gas = 500000; // max gas included. this must be replaced with estimateGas()
     console.log(gasPrices);
 
     this.setState({
