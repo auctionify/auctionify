@@ -32,6 +32,7 @@ import './App.scss';
 window.smartContract = smartContract;
 let web3,
   readOnlyWeb3,
+  network,
   BigNumber,
   fromWei,
   toWei,
@@ -326,14 +327,15 @@ const Auctionify = props => {
   return (
     <Row className='brand justify-content-center'>
       <div className='text-center align-self-center mt-5'>
-        <Col>
+        <Col xl>
           <img src={auctionIcon} width='100%' alt='auction logo' />
         </Col>
         <Col xl>
           <h1>Auctionify</h1>
         </Col>
-        <Col>
-          <p>103</p>
+        <Col xl>
+          <div className='network-name'><i className="fal fa-network-wired"></i> {network}</div>
+          <div className='version'>v0.0.1</div>
           {menu}
         </Col>
       </div>
@@ -1073,11 +1075,13 @@ class AuctionListItem extends Component {
     detail.transactionHash = detail.transactionHash || '-';
     detail.title = detail.title.trim() || '[ Untitled ]';
 
+    const networkSubdomain = network === 'mainnet' ? '' : `${network}.`;
+
     let contractAddress = (
       <Fragment>
         <i className='fa fa-spinner fa-pulse' />
         &nbsp;
-        <a target='_blank' rel='noopener noreferrer' href={`https://ropsten.etherscan.io/tx/${detail.transactionHash}`}>
+        <a target='_blank' rel='noopener noreferrer' href={`https://${networkSubdomain}etherscan.io/tx/${detail.transactionHash}`}>
           <code>{detail.transactionHash.toUpperCase().substr(0, 10)}</code> <i className='fa fa-external-link' />
         </a>
       </Fragment>
@@ -1189,6 +1193,7 @@ class App extends Component {
 
     web3 = web3s.web3;
     readOnlyWeb3 = web3s.readOnlyWeb3;
+    network = web3s.network;
 
     BigNumber = readOnlyWeb3.utils.BN;
     toWei = readOnlyWeb3.utils.toWei;

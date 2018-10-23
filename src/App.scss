@@ -51,8 +51,26 @@ body {
   color: white;
 
   h1 {
-    margin-top: 10px;
+    margin: 10px 0px 0px 0px;
     font-weight: 300;
+  }
+
+  .network-name {
+    text-transform: capitalize;
+    position: relative;
+    top: -5px;
+  }
+
+  .version {
+    font-size: 12px;
+    position: relative;
+    top: -8px;
+  }
+
+  .fal {
+    font-size: 11px;
+    position: relative;
+    top: -1px;    
   }
 }
 
