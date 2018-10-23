@@ -6,7 +6,7 @@ import auctionIcon from './images/auctionify.png';
 import ClickOutside from 'react-click-outside';
 import 'input-moment/dist/input-moment.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './datepicker.scss'
+import './datepicker.scss';
 
 import {
   Container,
@@ -20,62 +20,62 @@ import {
   InputGroup,
   Badge,
   FormGroup,
-  ListGroup,
+  ListGroup
 } from 'reactstrap';
-import { HashRouter, Route, withRouter, Link} from 'react-router-dom'
+import { HashRouter, Route, withRouter, Link} from 'react-router-dom';
 
 import {getWeb3} from './web3';
-import smartContract from '@auctionify/smart-contract'
+import smartContract from '@auctionify/smart-contract';
 
 import './App.scss';
 
 window.smartContract = smartContract;
 let web3,
-    readOnlyWeb3,
-    BigNumber,
-    fromWei,
-    toWei,
-    accounts = [],
-    WEI_STEP = '10000000000000000';
+  readOnlyWeb3,
+  BigNumber,
+  fromWei,
+  toWei,
+  accounts = [],
+  WEI_STEP = '10000000000000000';
 
 class AuctionStorage {
-  static add(item) {
+  static add (item) {
     const all = this.all();
     all.push(item);
     window.localStorage.setItem('faves', JSON.stringify(all));
   }
 
-  static all() {
+  static all () {
     return JSON.parse(window.localStorage.getItem('faves') || '[]');
   }
 
-  static remove(fn) {
+  static remove (fn) {
     const all = this.all();
     window.localStorage.setItem('faves', JSON.stringify(all.filter(i => !fn(i))));
   }
 
-  static replace(fn, item) {
+  static replace (fn, item) {
     let all = this.all();
     let index = all.findIndex(fn);
     if (index === -1) return false;
     all[index] = item;
-    window.localStorage.setItem('faves', JSON.stringify(all));  
+    window.localStorage.setItem('faves', JSON.stringify(all));
     return true;
   }
 
-  static exists(fn) {
+  static exists (fn) {
     return this.all().some(fn);
   }
 }
 
 class FormInput extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
 
     this.state = {
       value: props.value,
-      invalid: false,
-    }
+      invalid: false
+    };
 
     if (this.props.type === 'eth') {
       this.state.value = fromWei(this.state.value);
@@ -88,7 +88,7 @@ class FormInput extends Component {
     this.handleWithError = this.handleWithError.bind(this);
   }
 
-  setValue(val) {
+  setValue (val) {
     let properValue = val;
 
     if (this.props.type === 'eth') {
@@ -96,18 +96,18 @@ class FormInput extends Component {
     }
 
     this.setState({
-      value: properValue,
+      value: properValue
     });
   }
 
-  focus() {
+  focus () {
     this.inputElement && this.inputElement.focus();
   }
 
-  handleWithError(e) {
+  handleWithError (e) {
     this.setState({
       value: e.target.value,
-      invalid: true,
+      invalid: true
     });
 
     const event = {...e};
@@ -116,17 +116,17 @@ class FormInput extends Component {
       target: {
         name: e.target.name,
         value: e.target.value,
-        invalid: true,
+        invalid: true
       }
     });
   }
 
-  onChange(e) {
+  onChange (e) {
     let stateValue = e.target.value;
 
     this.setState({
       value: stateValue,
-      invalid: false,
+      invalid: false
     });
 
     if (this.props.type !== 'eth') {
@@ -134,7 +134,7 @@ class FormInput extends Component {
     }
 
     if (isNaN(stateValue) || stateValue.trim() === '') return this.handleWithError(e);
-    
+
     try {
       let valueWei = new BigNumber(toWei(stateValue));
       if (valueWei.lt(1)) return this.handleWithError(e);
@@ -143,24 +143,23 @@ class FormInput extends Component {
       this.props.onChange && this.props.onChange({
         target: {
           name: this.props.name,
-          value: valueWei,
+          value: valueWei
         }
       });
-
-    } catch(err) {
+    } catch (err) {
       return this.handleWithError(e);
     }
   }
 
-  onKeyDown(e) {
+  onKeyDown (e) {
     if (this.props.type === 'eth') {
       if (this.state.invalid) return;
       const diff = WEI_STEP.clone();
       if (e.keyCode === 38) {
         // do nothing
-      }else if (e.keyCode === 40) {
+      } else if (e.keyCode === 40) {
         diff.negative = 1;
-      }else {
+      } else {
         return;
       }
       let valueWei = this.props.value.add(diff);
@@ -169,57 +168,55 @@ class FormInput extends Component {
       this.props.onChange && this.props.onChange({
         target: {
           name: this.props.name,
-          value: valueWei,
+          value: valueWei
         }
       });
 
       this.setState({
         value: fromWei(valueWei),
-        invalid: false,
+        invalid: false
       });
 
       return;
     }
-    this.props.onKeyDown && this.props.onKeyDown(e); 
+    this.props.onKeyDown && this.props.onKeyDown(e);
   }
 
   render () {
     let append;
     if (this.props.append) {
       append = (
-        <InputGroupAddon onClick={this.focus} addonType="append">
+        <InputGroupAddon onClick={this.focus} addonType='append'>
           {this.props.append}
         </InputGroupAddon>
       );
-    }else if (this.props.appendIcon) {
+    } else if (this.props.appendIcon) {
       append = (
-        <InputGroupAddon onClick={this.focus} addonType="append">
-          <span className="input-group-text">
-            <i className={this.props.appendIcon}></i>
+        <InputGroupAddon onClick={this.focus} addonType='append'>
+          <span className='input-group-text'>
+            <i className={this.props.appendIcon} />
           </span>
         </InputGroupAddon>
       );
     }
 
-    const labelClassName = `flyingLabel ${(this.props.showLabel || this.props.value)?"visible":""}`;
+    const labelClassName = `flyingLabel ${(this.props.showLabel || this.props.value) ? 'visible' : ''}`;
 
     let type = this.props.type;
     if (this.props.type === 'eth') type = 'text';
-
-    
 
     return (
       <FormGroup className={`${this.state.invalid ? 'is-invalid' : ''}`}>
         <Label className={labelClassName} for={this.props.name}>{this.props.label}</Label>
         <InputGroup>
           <Input
-            className="withFlyingLabel"
-            autoComplete="off"
+            className='withFlyingLabel'
+            autoComplete='off'
             onChange={this.onChange}
             onKeyDown={this.onKeyDown}
             value={this.state.value}
-            bsSize={this.props.size || "lg"}
-            type={type || "text"}
+            bsSize={this.props.size || 'lg'}
+            type={type || 'text'}
             name={this.props.name}
             id={this.props.name}
             onFocus={this.props.onFocus}
@@ -237,53 +234,53 @@ class FormInput extends Component {
 }
 
 class FormDatePicker extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {
       moment: this.props.value || moment(),
-      showPicker: false,
-    }
+      showPicker: false
+    };
 
     this.inputElement = null;
 
     this.onChange = this.onChange.bind(this);
     this.handleSave = this.handleSave.bind(this);
-    
+
     this.showPicker = this.showPicker.bind(this);
     this.hidePicker = this.hidePicker.bind(this);
   }
 
-  onChange(moment) {
+  onChange (moment) {
     if (this.props.onChange) this.props.onChange.call(null, this.state.moment);
     this.setState({ moment });
     this.inputElement.setState({
-      value: this.value(),
-    });
-  };
-
-  handleSave() {
-    this.setState({
-      showPicker: false,
-    });
-  };
-
-  showPicker(e) {
-    this.setState({
-      showPicker: true,
+      value: this.value()
     });
   }
 
-  hidePicker(e) {
+  handleSave () {
     this.setState({
-      showPicker: false,
+      showPicker: false
     });
   }
 
-  value() {
+  showPicker (e) {
+    this.setState({
+      showPicker: true
+    });
+  }
+
+  hidePicker (e) {
+    this.setState({
+      showPicker: false
+    });
+  }
+
+  value () {
     return this.state.moment.format('lll');
   }
 
-  render() {
+  render () {
     return (
       <Fragment>
         <ClickOutside onClickOutside={this.handleSave}>
@@ -296,20 +293,20 @@ class FormDatePicker extends Component {
             placeholder={this.props.placeholder}
             onFocus={this.showPicker}
             label={this.props.label}
-            appendIcon="fa fa-calendar"
+            appendIcon='far fa-calendar-alt'
             readOnly
             ref={el => this.inputElement = el}
           />
-          <div id="date-picker-container">
+          <div id='date-picker-container'>
             <InputMoment
               moment={this.state.moment}
               onChange={this.onChange}
               minStep={5}
               onSave={this.handleSave}
-              id="datepicker"
-              className={this.state.showPicker?'visible':''}
-              prevMonthIcon="fa fa-angle-double-left"
-              nextMonthIcon="fa fa-angle-double-right"
+              id='datepicker'
+              className={this.state.showPicker ? 'visible' : ''}
+              prevMonthIcon='fa fa-angle-double-left'
+              nextMonthIcon='fa fa-angle-double-right'
             />
           </div>
         </ClickOutside>
@@ -321,16 +318,16 @@ const Auctionify = props => {
   let menu = '';
 
   if (props.linkTo === 'my-auctions') {
-    menu = <Link className="btn btn-primary btn-sm" id="menu-btn" to="/my-auctions">My Auctions</Link>
+    menu = <Link className='btn btn-primary btn-sm' id='menu-btn' to='/my-auctions'>My Auctions</Link>;
   } else if (props.linkTo === 'create-auction') {
-    menu = <Link className="btn btn-primary btn-sm" id="menu-btn" to="/">Create Auction</Link>
+    menu = <Link className='btn btn-primary btn-sm' id='menu-btn' to='/'>Create Auction</Link>;
   }
 
   return (
-    <Row className="brand justify-content-center">
-      <div className="text-center align-self-center mt-5">
+    <Row className='brand justify-content-center'>
+      <div className='text-center align-self-center mt-5'>
         <Col>
-          <img src={auctionIcon} width="100%" alt="auction logo" />
+          <img src={auctionIcon} width='100%' alt='auction logo' />
         </Col>
         <Col xl>
           <h1>Auctionify</h1>
@@ -341,20 +338,20 @@ const Auctionify = props => {
         </Col>
       </div>
     </Row>
-  )
-}
+  );
+};
 class CreateAuction extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {
       loading: false,
-      loadingText: '',
+      loadingText: ''
     };
 
     this.createAuction = this.createAuction.bind(this);
   }
-  
-  async createAuction(data) {
+
+  async createAuction (data) {
     this.setState({
       loading: true,
       loadingText: 'Deploying Contract'
@@ -368,32 +365,32 @@ class CreateAuction extends Component {
       data.description,
       data.minimumBid.toString(),
       data.listed,
-      data.escrowEnabled,
+      data.escrowEnabled
     ];
 
-    console.log("Deploy contract", args);
+    console.log('Deploy contract', args);
 
     contract.deploy({
       data: smartContract.bytecode,
-      arguments: args,
+      arguments: args
     }).send({
       from: data.account,
       gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
-      gas: window.gas,
+      gas: window.gas
     }).on('error', err => {
       console.log(err);
       this.setState({
-        loading: false,
+        loading: false
       });
     }).on('transactionHash', transactionHash => {
       AuctionStorage.add({
         mine: true,
         title: data.title,
-        transactionHash,
+        transactionHash
       });
-      
+
       this.setState({
-        loadingText: `Confirming ${transactionHash.substr(0, 10)}`,
+        loadingText: `Confirming ${transactionHash.substr(0, 10)}`
       });
     }).on('receipt', receipt => {
       this.setState({
@@ -401,21 +398,21 @@ class CreateAuction extends Component {
       });
       setTimeout(() => {
         this.setState({
-          loading: false,
+          loading: false
         });
         this.props.history.push(`/auction/${receipt.contractAddress}`);
       }, 2000);
-    })
+    });
   }
 
-  render() {
+  render () {
     return (
-      <LoadingOverlay background="rgba(255,255,255,.8)" color="#F60" active={this.state.loading} spinner text={this.state.loadingText}>
-        <Row className="m-0">
-          <Col lg={5} className="accent-bg">
+      <LoadingOverlay background='rgba(255,255,255,.8)' color='#F60' active={this.state.loading} spinner text={this.state.loadingText}>
+        <Row className='m-0'>
+          <Col lg={5} className='accent-bg'>
             <Auctionify linkTo='my-auctions' />
           </Col>
-          <Col lg={7} className="py-4">
+          <Col lg={7} className='py-4'>
             <CreateAuctionForm onSubmit={this.createAuction} />
           </Col>
         </Row>
@@ -425,7 +422,7 @@ class CreateAuction extends Component {
 }
 
 class CreateAuctionForm extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
 
     this.state = {
@@ -437,7 +434,7 @@ class CreateAuctionForm extends Component {
       isValid: true,
       listed: true,
       escrowEnabled: true,
-      accounts,
+      accounts
     };
 
     this.onInputChange = this.onInputChange.bind(this);
@@ -445,29 +442,29 @@ class CreateAuctionForm extends Component {
     this.onDateChange = this.onDateChange.bind(this);
   }
 
-  onInputChange({target}) {
+  onInputChange ({target}) {
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
     if (target.invalid) {
       this.setState({
         [name]: '-',
-        isValid: false,
+        isValid: false
       });
       return;
     }
 
     this.setState({
       [name]: value,
-      isValid: name === 'minimumBid' ? true : this.state.isValid,
+      isValid: name === 'minimumBid' ? true : this.state.isValid
     });
   }
 
-  onDateChange(auctionEnd) {
+  onDateChange (auctionEnd) {
     this.setState({ auctionEnd });
   }
 
-  createAuction(e) {
+  createAuction (e) {
     e.preventDefault();
     this.props.onSubmit({
       title: this.state.title,
@@ -476,39 +473,39 @@ class CreateAuctionForm extends Component {
       auctionEnd: this.state.auctionEnd,
       account: this.state.account,
       listed: this.state.listed,
-      escrowEnabled: this.state.escrowEnabled,
+      escrowEnabled: this.state.escrowEnabled
     });
   }
 
-  render() {
+  render () {
     return (
       <Fragment>
         <Container>
-          <Row><Col><h3 className="title">Create an auction!</h3></Col></Row>
+          <Row><Col><h3 className='title'>Create an auction!</h3></Col></Row>
         </Container>
-        <Form onSubmit={this.createAuction} id="auctionForm" className="container">
+        <Form onSubmit={this.createAuction} id='auctionForm' className='container'>
           <Row><Col>
-            <FormInput showLabel={true} name="title" label="Title" placeholder="Auction Title" onChange={this.onInputChange} value={this.state.title} />
-          </Col></Row>
-           <Row><Col>
-            <FormInput showLabel={true} name="description" label="Description" placeholder={"Auction Description"} type="textarea" onChange={this.onInputChange} value={this.state.description} />
+            <FormInput showLabel name='title' label='Title' placeholder='Auction Title' onChange={this.onInputChange} value={this.state.title} />
           </Col></Row>
           <Row><Col>
-            <FormDatePicker showLabel={true} name="auctionEnd" label="Deadline" type="date" onChange={this.onDateChange} value={this.state.auctionEnd} />
+            <FormInput showLabel name='description' label='Description' placeholder={'Auction Description'} type='textarea' onChange={this.onInputChange} value={this.state.description} />
           </Col></Row>
           <Row><Col>
-            <FormInput showLabel={true} min={new BigNumber('1')} name="minimumBid" label="Minimum Bid" placeholder="0.01" append="ETH" type="eth" onChange={this.onInputChange} value={this.state.minimumBid}/>
+            <FormDatePicker showLabel name='auctionEnd' label='Deadline' type='date' onChange={this.onDateChange} value={this.state.auctionEnd} />
           </Col></Row>
           <Row><Col>
-            <FormInput showLabel={true} name="account" label="Account" type="select" onChange={this.onInputChange} value={this.state.account}>
+            <FormInput showLabel min={new BigNumber('1')} name='minimumBid' label='Minimum Bid' placeholder='0.01' append='ETH' type='eth' onChange={this.onInputChange} value={this.state.minimumBid} />
+          </Col></Row>
+          <Row><Col>
+            <FormInput showLabel name='account' label='Account' type='select' onChange={this.onInputChange} value={this.state.account}>
               {this.state.accounts.map((account, index) => <option key={index}>{account}</option>)}
             </FormInput>
           </Col></Row>
-          <Row className="mt-2">
+          <Row className='mt-2'>
             <Col xs={6}>
               <FormGroup check>
                 <Label check>
-                  <Input onChange={this.onInputChange} checked={this.state.listed} name="listed" type="checkbox" />{' '}
+                  <Input onChange={this.onInputChange} checked={this.state.listed} name='listed' type='checkbox' />{' '}
                   Listed
                 </Label>
               </FormGroup>
@@ -516,15 +513,15 @@ class CreateAuctionForm extends Component {
             <Col xs={6}>
               <FormGroup check>
                 <Label check>
-                  <Input onChange={this.onInputChange} checked={this.state.escrowEnabled} name="escrowEnabled" type="checkbox" />{' '}
+                  <Input onChange={this.onInputChange} checked={this.state.escrowEnabled} name='escrowEnabled' type='checkbox' />{' '}
                   Enable escrow
                 </Label>
               </FormGroup>
             </Col>
           </Row>
-          <Row className="mt-3"><Col>
-            <FormGroup className="text-right">
-              <Button disabled={!this.state.isValid} id="createAuctionBtn" color="primary">Create Auction</Button>
+          <Row className='mt-3'><Col>
+            <FormGroup className='text-right'>
+              <Button disabled={!this.state.isValid} id='createAuctionBtn' color='primary'>Create Auction</Button>
             </FormGroup>
           </Col></Row>
         </Form>
@@ -534,21 +531,21 @@ class CreateAuctionForm extends Component {
 }
 
 class CountDown extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {
-      now: moment(),
-    }
+      now: moment()
+    };
   }
 
-  isFinished() {
+  isFinished () {
     return moment().diff(this.props.to) >= 0;
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.intervalId = setInterval(() => {
       this.setState({
-        now: moment(),
+        now: moment()
       });
       if (this.isFinished()) {
         this.props.onFinished();
@@ -556,42 +553,42 @@ class CountDown extends Component {
     }, 1000);
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     clearInterval(this.intervalId);
   }
 
-  render() {
-    if (!this.props.to || this.isFinished()) return <div></div>;
-    const duration = moment.duration(this.props.to-this.state.now);
-    const pad = n => (""+n).padStart(2, '0');
+  render () {
+    if (!this.props.to || this.isFinished()) return <div />;
+    const duration = moment.duration(this.props.to - this.state.now);
+    const pad = n => ('' + n).padStart(2, '0');
     return (
       <Row>
-        <Col className="text-center p-0">
-          <div className="countdown">
-            <div className="section">
-              <span className="time">{pad(Math.floor(duration.asDays()))}</span><br />
-              <span className="label">days</span>
+        <Col className='text-center p-0'>
+          <div className='countdown'>
+            <div className='section'>
+              <span className='time'>{pad(Math.floor(duration.asDays()))}</span><br />
+              <span className='label'>days</span>
             </div>
 
-            <div className="section"><span className="separater">:</span><br />&nbsp;</div>
-            
-            <div className="section">
-              <span className="time">{pad(duration.hours())}</span><br />
-              <span className="label">hours</span>
+            <div className='section'><span className='separater'>:</span><br />&nbsp;</div>
+
+            <div className='section'>
+              <span className='time'>{pad(duration.hours())}</span><br />
+              <span className='label'>hours</span>
             </div>
 
-            <div className="section"><span className="separater">:</span><br />&nbsp;</div>
-            
-            <div className="section">
-              <span className="time">{pad(duration.minutes())}</span><br />
-              <span className="label">minutes</span>
+            <div className='section'><span className='separater'>:</span><br />&nbsp;</div>
+
+            <div className='section'>
+              <span className='time'>{pad(duration.minutes())}</span><br />
+              <span className='label'>minutes</span>
             </div>
 
-            <div className="section"><span className="separater">:</span><br />&nbsp;</div>
-            
-            <div className="section">
-              <span className="time">{pad(duration.seconds())}</span><br />
-              <span className="label">seconds</span>
+            <div className='section'><span className='separater'>:</span><br />&nbsp;</div>
+
+            <div className='section'>
+              <span className='time'>{pad(duration.seconds())}</span><br />
+              <span className='label'>seconds</span>
             </div>
           </div>
         </Col>
@@ -604,33 +601,33 @@ const WinningNotice = props => {
   if (props.account && props.account === props.bidder) {
     return (
       <div>
-        <i className="fa fa-trophy"></i>
+        <i className='fa fa-trophy' />
         &nbsp; You are the highest bidder!
       </div>
     );
   }
   return '';
-}
+};
 
 class HighestBid extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {
       style: {
       }
-    }
+    };
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.resize();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate (prevProps) {
     if (this.props.bid === prevProps.bid) return;
     this.resize();
   }
 
-  resize() {
+  resize () {
     if (!this.containerEl) return;
 
     const ml = parseInt(getComputedStyle(this.containerEl, null).getPropertyValue('padding-left'));
@@ -638,12 +635,12 @@ class HighestBid extends Component {
       style: {
         width: `${this.containerEl.offsetHeight}px`,
         top: `${this.containerEl.offsetHeight}px`,
-        marginLeft: `${-ml}px`,
+        marginLeft: `${-ml}px`
       }
-    })
+    });
   }
 
-  render() {
+  render () {
     const props = this.props;
 
     if (!props.bid || props.bid.isZero()) {
@@ -661,17 +658,17 @@ class HighestBid extends Component {
         md={{size: 6, offset: 3}}
         lg={{size: 4, offset: 4}}
       >
-        <div className="highest-bid container" ref={el => this.containerEl = el}>
-          <div className="hb-label" style={this.state.style} ref={el => this.boxLabelEl = el}>
-            <i className="fa fa-trophy"></i> &nbsp;Highest Bid
+        <div className='highest-bid container' ref={el => this.containerEl = el}>
+          <div className='hb-label' style={this.state.style} ref={el => this.boxLabelEl = el}>
+            <i className='fa fa-trophy' /> &nbsp;Highest Bid
           </div>
-          <Row className="pl-4">
+          <Row className='pl-4'>
             <Col>
               <h3>{fromWei(props.bid).toString()} ETH</h3>
-              <div className="bidder">
-                <span className="address">{props.bidder.substr(0, 14)}</span>
-                <Badge color="dark" className={`you ${youVisible ? 'visible' : 'hidden'}`}>
-                  <i className="fa fa-star"></i> You
+              <div className='bidder'>
+                <span className='address'>{props.bidder.substr(0, 14)}</span>
+                <Badge color='dark' className={`you ${youVisible ? 'visible' : 'hidden'}`}>
+                  <i className='fa fa-star' /> You
                 </Badge>
               </div>
             </Col>
@@ -683,18 +680,18 @@ class HighestBid extends Component {
 }
 
 class ShowAuction extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {
       loading: true,
-      loadingText: 'loading auction',
-    }
+      loadingText: 'loading auction'
+    };
 
     this.bid = this.bid.bind(this);
     this.finalize = this.finalize.bind(this);
   }
 
-  async componentDidMount() {
+  async componentDidMount () {
     const contract = new readOnlyWeb3.eth.Contract(smartContract.ABI, this.props.match.params.address);
     window.contract = contract;
 
@@ -705,15 +702,15 @@ class ShowAuction extends Component {
       description: await contract.methods.auctionDescription().call(),
       highestBidder: await contract.methods.highestBidder().call(),
       minimumBid: new BigNumber(await contract.methods.minimumBid().call()),
-      highestBid: new BigNumber(await contract.methods.highestBid().call()),
-    }
+      highestBid: new BigNumber(await contract.methods.highestBid().call())
+    };
 
     const deadline = await contract.methods.auctionEnd().call();
-    auction.auctionEnd = moment(deadline*1000);//.add(-3, 'day');
+    auction.auctionEnd = moment(deadline * 1000);// .add(-3, 'day');
 
     this.setState({
       auction,
-      loading: false,
+      loading: false
     });
 
     contract.events.HighestBidIncreased().on('data', ({returnValues}) => {
@@ -724,18 +721,18 @@ class ShowAuction extends Component {
         auction: {
           ...this.state.auction,
           highestBidder,
-          highestBid,
+          highestBid
         }
       });
     });
   }
 
-  async finalize() {
+  async finalize () {
     const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
 
     this.setState({
       loading: true,
-      loadingText: 'Sending Transaction',
+      loadingText: 'Sending Transaction'
     });
 
     try {
@@ -743,10 +740,10 @@ class ShowAuction extends Component {
       await transaction.send({
         from: this.state.auction.account,
         gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
-        gas: window.gas,
+        gas: window.gas
       }).on('transactionHash', hash => {
         this.setState({
-          loadingText: `Confirming ${hash.substr(0, 10)}`,
+          loadingText: `Confirming ${hash.substr(0, 10)}`
         });
       }).on('error', err => {
         this.setState({
@@ -764,29 +761,28 @@ class ShowAuction extends Component {
 
     this.setState({
       loading: true,
-      loadingText: 'Sending Transaction',
+      loadingText: 'Sending Transaction'
     });
-  };
+  }
 
-  async bid({bidAmount}) {
+  async bid ({bidAmount}) {
     const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
 
     this.setState({
       loading: true,
-      loadingText: 'Sending Transaction',
+      loadingText: 'Sending Transaction'
     });
 
     try {
-
       const transaction = contract.methods.bid();
       await transaction.send({
         from: this.state.auction.account,
         value: bidAmount,
         gasPrice: toWei(window.gasPrice.toString(), 'Gwei'),
-        gas: window.gas,
+        gas: window.gas
       }).on('transactionHash', hash => {
         this.setState({
-          loadingText: `Confirming ${hash.substr(0, 10)}`,
+          loadingText: `Confirming ${hash.substr(0, 10)}`
         });
       }).on('error', err => {
         this.setState({
@@ -804,13 +800,13 @@ class ShowAuction extends Component {
     }
   }
 
-  render() {
-    let auction = (<div className="accent-bg auction-placeholder"><span></span></div>);
+  render () {
+    let auction = (<div className='accent-bg auction-placeholder'><span /></div>);
     if (this.state.auction) {
       auction = (<Auction auction={this.state.auction} onBid={this.bid} onFinalized={this.finalize} />);
     }
     return (
-      <LoadingOverlay background="rgba(255,255,255,.7)" color="#F60" active={this.state.loading} spinner text={this.state.loadingText}>
+      <LoadingOverlay background='rgba(255,255,255,.7)' color='#F60' active={this.state.loading} spinner text={this.state.loadingText}>
         {auction}
       </LoadingOverlay>
     );
@@ -822,17 +818,17 @@ const AuctionEndStatus = props => {
 
   let label = 'Auction has ended';
   if (props.highestBidder === '0x0000000000000000000000000000000000000000') {
-    label += ' without a winner'
+    label += ' without a winner';
   }
 
   return (
     <Row>
-      <Col className="text-center p-0">
-        <span><i className="fa fa-calendar-times-o"></i> {label}</span>
+      <Col className='text-center p-0'>
+        <span><i className='fa fa-calendar-times-o' /> {label}</span>
       </Col>
     </Row>
   );
-}
+};
 
 const FinalizeAuction = props => {
   if (!props.show) return '';
@@ -842,46 +838,46 @@ const FinalizeAuction = props => {
   }
 
   return (
-    <Row className="bid-container">
-      <Col><Form><Row className="mt-2">
+    <Row className='bid-container'>
+      <Col><Form><Row className='mt-2'>
         <Col
-          className="text-center"
+          className='text-center'
           sm={{size: 8, offset: 2}}
           md={{size: 6, offset: 3}}
           lg={{size: 4, offset: 4}}
           >
-          <Button id="fin" block color="primary" onClick={props.onClick}>Finalize Auction</Button>
+          <Button id='fin' block color='primary' onClick={props.onClick}>Finalize Auction</Button>
         </Col>
-        <Col xs={12} className="text-center mt-2 finalize-notice">
-           <i className="fa fa-info-circle"></i> Finalizing the auction transfers the money to the beneficiary!
+        <Col xs={12} className='text-center mt-2 finalize-notice'>
+          <i className='fa fa-info-circle' /> Finalizing the auction transfers the money to the beneficiary!
         </Col>
       </Row>
-    </Form></Col></Row>
-  )
-}
+      </Form></Col></Row>
+  );
+};
 
 class BidAuction extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
 
     this.state = {
-      bidAmount: BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(WEI_STEP)),
-    }
+      bidAmount: BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(WEI_STEP))
+    };
 
     this.onInputChange = this.onInputChange.bind(this);
     this.bid = this.bid.bind(this);
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate (prevProps) {
     if (this.props.auction.highestBid === prevProps.auction.highestBid) return;
     const bidAmount = BigNumber.max(this.state.bidAmount, this.props.auction.highestBid.add(WEI_STEP));
     this.setState({
-      bidAmount,
+      bidAmount
     });
     this.ethInput.setValue(bidAmount);
   }
 
-  onInputChange({target}) {
+  onInputChange ({target}) {
     const value = target.value;
     const name = target.name;
 
@@ -890,48 +886,48 @@ class BidAuction extends Component {
     });
   }
 
-  minimumAcceptableBid() {
-    return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(new BigNumber('1')))
+  minimumAcceptableBid () {
+    return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(new BigNumber('1')));
   }
 
-  bid(e) {
+  bid (e) {
     e.preventDefault();
     this.props.onBid({
-      bidAmount: this.state.bidAmount,
-    })
+      bidAmount: this.state.bidAmount
+    });
   }
 
-  render() {
+  render () {
     if (!this.props.show) return '';
 
     return (
-      <Row className="bid-container">
+      <Row className='bid-container'>
         <Col
           sm={{size: 8, offset: 2}}
           md={{size: 6, offset: 3}}
           lg={{size: 4, offset: 4}} >
-          <Form onSubmit={this.bid} id="bidForm">
+          <Form onSubmit={this.bid} id='bidForm'>
             <Row>
               <Col>
-                <FormInput showLabel={true}
-                  name="bidAmount"
+                <FormInput showLabel
+                  name='bidAmount'
                   min={this.minimumAcceptableBid()}
-                  label="Amount"
-                  placeholder="0.01"
-                  type="eth"
-                  append="ETH"
+                  label='Amount'
+                  placeholder='0.01'
+                  type='eth'
+                  append='ETH'
                   onChange={this.onInputChange}
                   value={this.state.bidAmount}
                   ref={el => this.ethInput = el}
                 />
               </Col>
             </Row>
-            <Row className="mt-2">
-              <Col sm={{size: 4, order:2}} className="text-right">
-                <Button id="bid" block color="primary" onClick={this.bid}>Bid</Button>
+            <Row className='mt-2'>
+              <Col sm={{size: 4, order: 2}} className='text-right'>
+                <Button id='bid' block color='primary' onClick={this.bid}>Bid</Button>
               </Col>
-              <Col order={1} className="text-center text-sm-left mt-2 winner-notice">
-                 <WinningNotice bidder={this.props.auction.highestBidder} account={this.props.auction.account} />
+              <Col order={1} className='text-center text-sm-left mt-2 winner-notice'>
+                <WinningNotice bidder={this.props.auction.highestBidder} account={this.props.auction.account} />
               </Col>
             </Row>
           </Form>
@@ -946,78 +942,78 @@ const FavoriteStar = props => {
   const onToggle = e => {
     e.preventDefault();
     props.onToggle(!props.faved);
-  }
+  };
   return (
-    <div onClick={onToggle} className="fav-star">
-      <i className={`icon fa ${className}`}></i>
+    <div onClick={onToggle} className='fav-star'>
+      <i className={`icon fa ${className}`} />
     </div>
   );
-}
+};
 
 class Auction extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
-    
+
     this.state = {
       finished: this.isFinished(),
-      faved: AuctionStorage.exists(i => i.contractAddress === this.props.auction.address),
-    }
-    
+      faved: AuctionStorage.exists(i => i.contractAddress === this.props.auction.address)
+    };
+
     this.onBid = this.onBid.bind(this);
     this.finalize = this.finalize.bind(this);
     this.onFinished = this.onFinished.bind(this);
     this.onToggleFav = this.onToggleFav.bind(this);
   }
 
-  finalize(e) {
+  finalize (e) {
     e.preventDefault();
     this.props.onFinalized();
   }
 
-  isFinished() {
+  isFinished () {
     return moment().diff(this.props.auction.auctionEnd) >= 0;
   }
 
-  onFinished() {
+  onFinished () {
     this.setState({
-      finished: true,
+      finished: true
     });
   }
 
-  onToggleFav(faved) {
+  onToggleFav (faved) {
     this.setState({
-      faved,
+      faved
     });
 
     if (faved) {
       AuctionStorage.add({
         contractAddress: this.props.auction.address,
-        title: this.props.auction.title,
+        title: this.props.auction.title
       });
-    }else {
+    } else {
       AuctionStorage.remove(i => i.contractAddress === this.props.auction.address);
     }
   }
 
-  onBid(e) {
+  onBid (e) {
     if (!this.state.faved) {
       this.onToggleFav(true);
     }
     this.props.onBid(e);
   }
 
-  render() {
+  render () {
     const {auction} = this.props;
     if (!auction) {
       return '';
     }
 
     return (
-      <Row className="m-0">
-        <Col lg="12" className="accent-bg auction-header container">
+      <Row className='m-0'>
+        <Col lg='12' className='accent-bg auction-header container'>
           <Row>
             <Col>
-              <h1 id="auction-title">{auction.title}</h1>
+              <h1 id='auction-title'>{auction.title}</h1>
               <FavoriteStar faved={this.state.faved} onToggle={this.onToggleFav} />
             </Col>
           </Row>
@@ -1027,10 +1023,10 @@ class Auction extends Component {
           <CountDown onFinished={this.onFinished} to={auction.auctionEnd} />
           <AuctionEndStatus show={this.state.finished} highestBidder={auction.highestBidder} />
         </Col>
-        <Col className="py-4">
+        <Col className='py-4'>
           <Container>
             <Row><Col>
-              <p id="auction-description">{auction.description.split(/\n/).map((line, key) => {
+              <p id='auction-description'>{auction.description.split(/\n/).map((line, key) => {
                 return <Fragment key={key}>{line}<br /></Fragment>;
               })}</p>
             </Col></Row>
@@ -1045,42 +1041,42 @@ class Auction extends Component {
 
 const Footer = () => {
   return (
-    <Container className="footer">
+    <Container className='footer'>
       <Row noGutters>
-        <Col className="text-center text-lg-right">
-          <a href="https://github.com/auctionify/auctionify"><i className="fa fa-github"></i> Auctionify </a>
-           | Made with <i className="fa fa-heart"></i> in Montréal
+        <Col className='text-center text-lg-right'>
+          <a href='https://etherscan.io/address/auctionify.eth'><i className='fab fa-ethereum' /> Auctionify.eth </a>
+           | <a href='https://github.com/auctionify/auctionify'><i className='fab fa-github' /> Auctionify </a>
+           | Made with <i className='fa fa-heart' /> in Montréal
         </Col>
       </Row>
     </Container>
   );
-}
+};
 
 class AuctionListItem extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
 
     this.remove = this.remove.bind(this);
   }
 
-
-  remove(e) {
+  remove (e) {
     e.preventDefault();
-    this.props.remove(this.props.detail)
+    this.props.remove(this.props.detail);
   }
 
-  render() {
+  render () {
     const detail = this.props.detail;
 
     detail.transactionHash = detail.transactionHash || '-';
     detail.title = detail.title.trim() || '[ Untitled ]';
-    
+
     let contractAddress = (
       <Fragment>
-        <i className="fa fa-spinner fa-pulse"></i>
+        <i className='fa fa-spinner fa-pulse' />
         &nbsp;
-        <a target="_blank" rel="noopener noreferrer" href={`https://ropsten.etherscan.io/tx/${detail.transactionHash}`}>
-          <code>{detail.transactionHash.toUpperCase().substr(0, 10)}</code> <i className="fa fa-external-link"></i>
+        <a target='_blank' rel='noopener noreferrer' href={`https://ropsten.etherscan.io/tx/${detail.transactionHash}`}>
+          <code>{detail.transactionHash.toUpperCase().substr(0, 10)}</code> <i className='fa fa-external-link' />
         </a>
       </Fragment>
     );
@@ -1088,17 +1084,17 @@ class AuctionListItem extends Component {
     if (detail.contractAddress) {
       contractAddress = (
         <Fragment>
-          <Link className="to-auction" to={`/auction/${detail.contractAddress}`}><code>{detail.contractAddress.toUpperCase().substr(0, 10)}</code></Link>
+          <Link className='to-auction' to={`/auction/${detail.contractAddress}`}><code>{detail.contractAddress.toUpperCase().substr(0, 10)}</code></Link>
         </Fragment>
       );
     }
     return (
-      <li className="list-group-item container">
+      <li className='list-group-item container'>
         <Row>
           <Col md={8}>
-            <i className="fa fa-star golden"></i> {detail.title}
+            <i className='fa fa-star golden' /> {detail.title}
           </Col>
-          <Col md={4} className="text-left text-md-right addr">
+          <Col md={4} className='text-left text-md-right addr'>
             {contractAddress}
           </Col>
         </Row>
@@ -1108,15 +1104,15 @@ class AuctionListItem extends Component {
 }
 
 class AuctionsList extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
 
     this.state = {
-      list: AuctionStorage.all(),
-    }
+      list: AuctionStorage.all()
+    };
   }
 
-  async getContractAddr(transactionHash) {
+  async getContractAddr (transactionHash) {
     let receipt = null;
     while (!receipt) {
       receipt = await readOnlyWeb3.eth.getTransactionReceipt(transactionHash);
@@ -1125,7 +1121,7 @@ class AuctionsList extends Component {
     return receipt.contractAddress;
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.state.list.forEach(async item => {
       if (item.contractAddress) return;
       const contractAddress = await this.getContractAddr(item.transactionHash);
@@ -1134,7 +1130,7 @@ class AuctionsList extends Component {
       AuctionStorage.replace(i => i.transactionHash === item.transactionHash, item);
 
       this.setState({
-        list: [...this.state.list],
+        list: [...this.state.list]
       });
     });
   }
@@ -1142,9 +1138,9 @@ class AuctionsList extends Component {
   render () {
     return (
       <Container>
-        <Row><Col><h3 className="title">My Auctions</h3></Col></Row>
+        <Row><Col><h3 className='title'>My Auctions</h3></Col></Row>
         <Row>
-          <ListGroup flush className="w-100 auctions-list">
+          <ListGroup flush className='w-100 auctions-list'>
             {this.state.list.map((auctionDetail, key) => {
               return (
                 <AuctionListItem key={key} detail={auctionDetail} />
@@ -1158,17 +1154,17 @@ class AuctionsList extends Component {
 }
 
 class MyAuctions extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
   }
 
-  render() {
+  render () {
     return (
-      <Row className="m-0">
-        <Col lg={5} className="accent-bg">
+      <Row className='m-0'>
+        <Col lg={5} className='accent-bg'>
           <Auctionify linkTo='create-auction' />
         </Col>
-        <Col lg={7} className="py-4">
+        <Col lg={7} className='py-4'>
           <AuctionsList />
         </Col>
       </Row>
@@ -1177,16 +1173,16 @@ class MyAuctions extends Component {
 }
 
 class App extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {
       loaded: false
     };
 
-    this.setup().then(() => console.log("Setup complete!"));
+    this.setup().then(() => console.log('Setup complete!'));
   }
 
-  async setup() {
+  async setup () {
     const web3s = await getWeb3();
 
     web3 = web3s.web3;
@@ -1212,21 +1208,21 @@ class App extends Component {
     window.gasPrice = gasPrices.average;
     window.gas = 1500000;
     console.log(gasPrices);
-    
+
     this.setState({
-      loaded: true,
+      loaded: true
     });
   }
 
-  render() {
-    let content = (<div></div>);
+  render () {
+    let content = (<div />);
     if (this.state.loaded) {
       content = (
-        <Container className="main-container">
-          <Container className="main">
-            <Route path="/" exact={true} component={withRouter(CreateAuction)} />
-            <Route path="/auction/:address" component={withRouter(ShowAuction)} />
-            <Route path="/my-auctions/" component={withRouter(MyAuctions)} />
+        <Container className='main-container'>
+          <Container className='main'>
+            <Route path='/' exact component={withRouter(CreateAuction)} />
+            <Route path='/auction/:address' component={withRouter(ShowAuction)} />
+            <Route path='/my-auctions/' component={withRouter(MyAuctions)} />
             <Footer />
           </Container>
         </Container>
