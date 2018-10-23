@@ -1043,10 +1043,12 @@ const Footer = () => {
   return (
     <Container className='footer'>
       <Row noGutters>
-        <Col className='text-center text-lg-right'>
-          <a href='https://etherscan.io/address/auctionify.eth'><i className='fab fa-ethereum' /> Auctionify.eth </a>
-           | <a href='https://github.com/auctionify/auctionify'><i className='fab fa-github' /> Auctionify </a>
+        <Col lg={{size: 6, order: 2}} className='text-center text-lg-right'>
+          <a href='https://github.com/auctionify/auctionify'><i className='fab fa-github' /> Auctionify </a>
            | Made with <i className='fa fa-heart' /> in Montréal
+        </Col>
+        <Col lg={{size: 6, order: 1}} className='text-center text-lg-left'>
+          <a href='https://etherscan.io/address/auctionify.eth'><i className='fab fa-ethereum' /> Auctionify.eth </a>
         </Col>
       </Row>
     </Container>

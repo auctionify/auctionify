@@ -197,6 +197,9 @@ div.countdown {
       color: black;
     }
   }
+  .row > div {
+    margin-bottom: 6px;
+  }
 }
 @keyframes move {
   0% {
