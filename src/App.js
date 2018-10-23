@@ -294,6 +294,7 @@ class FormDatePicker extends Component {
             placeholder={this.props.placeholder}
             onFocus={this.showPicker}
             label={this.props.label}
+            message={this.props.message}
             appendIcon='far fa-calendar-alt'
             readOnly
             ref={el => this.inputElement = el}
@@ -334,7 +335,7 @@ const Auctionify = props => {
           <h1>Auctionify</h1>
         </Col>
         <Col xl>
-          <div className='network-name'><i className="fal fa-network-wired"></i> {network}</div>
+          <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
           <div className='version'>v0.0.1</div>
           {menu}
         </Col>
@@ -703,6 +704,7 @@ class ShowAuction extends Component {
       title: await contract.methods.auctionTitle().call(),
       description: await contract.methods.auctionDescription().call(),
       highestBidder: await contract.methods.highestBidder().call(),
+      escrowModerator: await contract.methods.escrowModerator().call(),
       minimumBid: new BigNumber(await contract.methods.minimumBid().call()),
       highestBid: new BigNumber(await contract.methods.highestBid().call())
     };
@@ -718,7 +720,6 @@ class ShowAuction extends Component {
     contract.events.HighestBidIncreased().on('data', ({returnValues}) => {
       const highestBidder = returnValues.bidder;
       const highestBid = new BigNumber(returnValues.amount);
-
       this.setState({
         auction: {
           ...this.state.auction,
@@ -835,24 +836,36 @@ const AuctionEndStatus = props => {
 const FinalizeAuction = props => {
   if (!props.show) return '';
 
-  if (props.auction.account !== props.auction.highestBidder) {
+  if (props.auction.account !== props.auction.highestBidder &&
+    props.auction.account !== props.auction.escrowModerator) { // This second condition is a temporary solution. TODO: on escrowModerator should see link/info to the dispute (On chain dispute trigger?).
     return '';
+  }
+  let message = null;
+  if (props.auction.account === props.auction.highestBidder) {
+    message = 'You won the auction!';
+  }
+  if (props.auction.account === props.auction.escrowModerator) {
+    message = 'You are the Escrow Moderator, be fair!';
   }
 
   return (
     <Row className='bid-container'>
-      <Col><Form><Row className='mt-2'>
+      <Col><Form><Row className='mt-3'>
         <Col
           className='text-center'
           sm={{size: 8, offset: 2}}
           md={{size: 6, offset: 3}}
           lg={{size: 4, offset: 4}}
-          >
+        >
           <Button id='fin' block color='primary' onClick={props.onClick}>Finalize Auction</Button>
         </Col>
-        <Col xs={12} className='text-center mt-2 finalize-notice'>
-          <i className='fas fa-info-circle' /> Finalizing the auction transfers the money to the beneficiary!
+        <Col xs={12} className='text-center mt-3 finalize-notice'>
+          <i className='fas fa-trophy' /> {message}
         </Col>
+        <Col xs={12} className='text-center mt-3 finalize-notice'>
+          <i className='fas fa-info-circle' />  Finalizing the auction transfers the money to the beneficiary!
+        </Col>
+
       </Row>
       </Form></Col></Row>
   );
@@ -1046,11 +1059,11 @@ const Footer = () => {
     <Container className='footer'>
       <Row noGutters>
         <Col lg={{size: 6, order: 2}} className='text-center text-lg-right'>
-          <a href='https://github.com/auctionify/auctionify'><i className='fab fa-github' /> Auctionify </a>
+          <a target='_blank' href='https://github.com/auctionify'><i className='fab fa-github' /> Auctionify </a>
            | Made with <i className='fa fa-heart' /> in Montréal
         </Col>
         <Col lg={{size: 6, order: 1}} className='text-center text-lg-left'>
-          <a href='https://etherscan.io/address/auctionify.eth'><i className='fab fa-ethereum' /> Auctionify.eth </a>
+          <a target='_blank' href='https://etherscan.io/address/auctionify.eth'><i className='fab fa-ethereum' /> Auctionify.eth </a>
         </Col>
       </Row>
     </Container>
