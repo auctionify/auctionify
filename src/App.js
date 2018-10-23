@@ -295,6 +295,7 @@ class FormDatePicker extends Component {
             onFocus={this.showPicker}
             label={this.props.label}
             message={this.props.message}
+            min={this.probs.min}
             appendIcon='far fa-calendar-alt'
             readOnly
             ref={el => this.inputElement = el}
@@ -497,7 +498,7 @@ class CreateAuctionForm extends Component {
             <FormDatePicker showLabel name='auctionEnd' label='Deadline' type='date' onChange={this.onDateChange} value={this.state.auctionEnd} />
           </Col></Row>
           <Row><Col>
-            <FormInput showLabel min={new BigNumber('1')} name='minimumBid' label='Minimum Bid' placeholder='0.01' append='ETH' type='eth' onChange={this.onInputChange} value={this.state.minimumBid} />
+            <FormInput showLabel min={this.state.minimumBid} name='minimumBid' label='Minimum Bid' placeholder='0.01' append='ETH' type='eth' onChange={this.onInputChange} value={this.state.minimumBid} />
           </Col></Row>
           <Row><Col>
             <FormInput showLabel name='account' label='Account' type='select' onChange={this.onInputChange} value={this.state.account}>
@@ -912,7 +913,7 @@ class BidAuction extends Component {
   }
 
   minimumAcceptableBid () {
-    return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(new BigNumber('1')));
+    return BigNumber.max(this.props.auction.minimumBid, this.props.auction.highestBid.add(this.props.auction.minimumBid));
   }
 
   bid (e) {
