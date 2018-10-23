@@ -705,6 +705,7 @@ class ShowAuction extends Component {
       description: await contract.methods.auctionDescription().call(),
       highestBidder: await contract.methods.highestBidder().call(),
       escrowModerator: await contract.methods.escrowModerator().call(),
+      auctionState: await contract.methods.auctionState().call(),
       minimumBid: new BigNumber(await contract.methods.minimumBid().call()),
       highestBid: new BigNumber(await contract.methods.highestBid().call())
     };
@@ -824,6 +825,10 @@ const AuctionEndStatus = props => {
     label += ' without a winner';
   }
 
+  if (props.auctionState === '2') {
+    label = ' Auction is Finalized!';
+  }
+
   return (
     <Row>
       <Col className='text-center p-0'>
@@ -835,6 +840,11 @@ const AuctionEndStatus = props => {
 
 const FinalizeAuction = props => {
   if (!props.show) return '';
+
+  if (props.auction.auctionState == 2) {
+    // TODO: show button to call cleanUpAfterYourself() to everyone
+    return '';
+  }
 
   if (props.auction.account !== props.auction.highestBidder &&
     props.auction.account !== props.auction.escrowModerator) { // This second condition is a temporary solution. TODO: on escrowModerator should see link/info to the dispute (On chain dispute trigger?).
@@ -1022,13 +1032,15 @@ class Auction extends Component {
     if (!auction) {
       return '';
     }
+    const networkSubdomain = network === 'mainnet' ? '' : `${network}.`;
 
     return (
       <Row className='m-0'>
         <Col lg='12' className='accent-bg auction-header container'>
           <Row>
             <Col>
-              <h1 id='auction-title'>{auction.title}</h1>
+              <a target='_blank' rel='noopener noreferrer' href={`https://${networkSubdomain}etherscan.io/address/${this.props.auction.address}`}> <i class='far fa-fingerprint' /></a>
+              <h1 id='auction-title'> {auction.title}</h1>
               <FavoriteStar faved={this.state.faved} onToggle={this.onToggleFav} />
             </Col>
           </Row>
@@ -1036,7 +1048,7 @@ class Auction extends Component {
             <HighestBid bid={auction.highestBid} bidder={auction.highestBidder} account={auction.account} />
           </Row>
           <CountDown onFinished={this.onFinished} to={auction.auctionEnd} />
-          <AuctionEndStatus show={this.state.finished} highestBidder={auction.highestBidder} />
+          <AuctionEndStatus show={this.state.finished} highestBidder={auction.highestBidder} auctionState={auction.auctionState} />
         </Col>
         <Col className='py-4'>
           <Container>
