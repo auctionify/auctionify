@@ -2,6 +2,7 @@
   "name": "auctionify",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://auctionify.xyz",
   "dependencies": {
     "@auctionify/smart-contract": "^1.0.1",
     "bootstrap": "^4.1.3",

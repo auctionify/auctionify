@@ -824,7 +824,7 @@ const AuctionEndStatus = props => {
   return (
     <Row>
       <Col className='text-center p-0'>
-        <span><i className='fa fa-calendar-times-o' /> {label}</span>
+        <span><i className='far fa-calendar-times' /> {label}</span>
       </Col>
     </Row>
   );
@@ -849,7 +849,7 @@ const FinalizeAuction = props => {
           <Button id='fin' block color='primary' onClick={props.onClick}>Finalize Auction</Button>
         </Col>
         <Col xs={12} className='text-center mt-2 finalize-notice'>
-          <i className='fa fa-info-circle' /> Finalizing the auction transfers the money to the beneficiary!
+          <i className='fas fa-info-circle' /> Finalizing the auction transfers the money to the beneficiary!
         </Col>
       </Row>
       </Form></Col></Row>
@@ -938,14 +938,14 @@ class BidAuction extends Component {
 }
 
 const FavoriteStar = props => {
-  const className = props.faved ? 'fa-star' : 'fa-star-o';
+  const className = props.faved ? 'fas fa-star' : 'far fa-star';
   const onToggle = e => {
     e.preventDefault();
     props.onToggle(!props.faved);
   };
   return (
     <div onClick={onToggle} className='fav-star'>
-      <i className={`icon fa ${className}`} />
+      <i className={`icon ${className}`} />
     </div>
   );
 };
@@ -1206,7 +1206,7 @@ class App extends Component {
     const gasPrices = await response.json();
 
     window.gasPrice = gasPrices.average;
-    window.gas = 1500000;
+    window.gas = 1000000; // max gas included. this must be replaced with estimateGas()
     console.log(gasPrices);
 
     this.setState({
