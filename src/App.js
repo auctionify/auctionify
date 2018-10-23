@@ -295,7 +295,6 @@ class FormDatePicker extends Component {
             onFocus={this.showPicker}
             label={this.props.label}
             message={this.props.message}
-            min={this.probs.min}
             appendIcon='far fa-calendar-alt'
             readOnly
             ref={el => this.inputElement = el}
@@ -490,6 +489,7 @@ class CreateAuctionForm extends Component {
         <Form onSubmit={this.createAuction} id='auctionForm' className='container'>
           <Row><Col>
             <FormInput showLabel name='title' label='Title' placeholder='Auction Title' onChange={this.onInputChange} value={this.state.title} />
+
           </Col></Row>
           <Row><Col>
             <FormInput showLabel name='description' label='Description' placeholder={'Auction Description'} type='textarea' onChange={this.onInputChange} value={this.state.description} />
@@ -1040,9 +1040,9 @@ class Auction extends Component {
         <Col lg='12' className='accent-bg auction-header container'>
           <Row>
             <Col>
-              <a target='_blank' rel='noopener noreferrer' href={`https://${networkSubdomain}etherscan.io/address/${this.props.auction.address}`}> <i className='far fa-fingerprint' /></a>
               <h1 id='auction-title'> {auction.title}</h1>
               <FavoriteStar faved={this.state.faved} onToggle={this.onToggleFav} />
+              <a target='_blank' rel='noopener noreferrer' href={`https://${networkSubdomain}etherscan.io/address/${this.props.auction.address}`}> <div className='network-name'><i className='fal fa-network-wired' /> {network}</div> </a>
             </Col>
           </Row>
           <Row>
