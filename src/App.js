@@ -307,7 +307,7 @@ class FormDatePicker extends Component {
             <InputMoment
               moment={this.state.moment}
               onChange={this.onChange}
-              minStep={5}
+              minStep={1}
               onSave={this.handleSave}
               id='datepicker'
               className={this.state.showPicker ? 'visible' : ''}
@@ -340,7 +340,7 @@ const Auctionify = props => {
         </Col>
         <Col xl>
           <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
-          <div className='version'>v0.2.3</div>
+          <div className='version'>v0.2.4</div>
           {menu}
         </Col>
       </div>
