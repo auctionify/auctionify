@@ -742,9 +742,9 @@ class HighestBid extends Component {
 const MetaMaskModal = props => {
   return (
     <Modal isOpen={props.isOpen} toggle={props.toggle} className='metamask-modal'>
-      <ModalHeader toggle={props.toggle}>MetaMask Required</ModalHeader>
+      <ModalHeader toggle={props.toggle}>Web3 Required</ModalHeader>
       <ModalBody>
-        Auctionify currently only works with <a href='https://metamask.io/' rel='noopener noreferrer' target='_blank'>MetaMask!</a><br />
+        Auctionify currently works with <a href='https://metamask.io/' rel='noopener noreferrer' target='_blank'>MetaMask</a> and mobile wallets (<a href='https://status.im/' rel='noopener noreferrer' target='_blank'>Status.im</a>, <a href='https://wallet.coinbase.com/' rel='noopener noreferrer' target='_blank'>Coinbase</a>, <a href='https://trustwalletapp.com/' rel='noopener noreferrer' target='_blank'>Trust</a>, etc)<br />
       </ModalBody>
       <ModalFooter>
         <Button color='primary' size='sm' onClick={props.toggle}>Ok</Button>
