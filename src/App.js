@@ -358,7 +358,7 @@ class CreateAuction extends Component {
     this.state = {
       loading: false,
       loadingText: '',
-      showModal: false,
+      showModal: false
     };
 
     this.createAuction = this.createAuction.bind(this);
@@ -368,7 +368,7 @@ class CreateAuction extends Component {
   async createAuction (data) {
     if (!web3) {
       return this.setState({
-        showModal: true,
+        showModal: true
       });
     }
 
@@ -425,9 +425,9 @@ class CreateAuction extends Component {
     });
   }
 
-  toggleModal() {
+  toggleModal () {
     this.setState({
-      showModal: !this.state.showModal,
+      showModal: !this.state.showModal
     });
   }
 
@@ -651,7 +651,7 @@ class HighestBid extends Component {
     this.resize();
   }
 
-  hideIndicatorOnFocus() {
+  hideIndicatorOnFocus () {
     clearInterval(this.intervalId);
     clearTimeout(this.timeoutId);
 
@@ -660,14 +660,14 @@ class HighestBid extends Component {
         clearInterval(this.intervalId);
         this.timeoutId = setTimeout(() => {
           this.setState({
-            showIndicator: false,
+            showIndicator: false
           });
-        }, 10000)
+        }, 10000);
       }
     }, 1000);
-  };
+  }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     clearInterval(this.intervalId);
     clearTimeout(this.timeoutId);
   }
@@ -677,7 +677,7 @@ class HighestBid extends Component {
 
     beep();
     this.setState({
-      showIndicator: true,
+      showIndicator: true
     });
     this.hideIndicatorOnFocus();
 
@@ -717,7 +717,7 @@ class HighestBid extends Component {
       >
         <div className='highest-bid container' ref={el => this.containerEl = el}>
           <div className={`highest-bid-indicator ${this.state.showIndicator ? '' : 'hidden'}`}>
-            <i className="fas fa-bell"></i>
+            <i className='fas fa-bell' />
           </div>
           <div className='hb-label' style={this.state.style} ref={el => this.boxLabelEl = el}>
             <i className='fa fa-trophy' /> &nbsp;Highest Bid
@@ -751,7 +751,7 @@ const MetaMaskModal = props => {
       </ModalFooter>
     </Modal>
   );
-}
+};
 
 class ShowAuction extends Component {
   constructor (props) {
@@ -759,7 +759,7 @@ class ShowAuction extends Component {
     this.state = {
       loading: true,
       loadingText: 'loading auction',
-      showModal: false,
+      showModal: false
     };
 
     this.bid = this.bid.bind(this);
@@ -780,7 +780,9 @@ class ShowAuction extends Component {
       escrowModerator: await contract.methods.escrowModerator().call(),
       auctionState: await contract.methods.auctionState().call(),
       minimumBid: new BigNumber(await contract.methods.minimumBid().call()),
-      highestBid: new BigNumber(await contract.methods.highestBid().call())
+      highestBid: new BigNumber(await contract.methods.highestBid().call()),
+      beneficiary: await contract.methods.beneficiary().call()
+
     };
 
     const deadline = await contract.methods.auctionEnd().call();
@@ -807,7 +809,7 @@ class ShowAuction extends Component {
   async finalize () {
     if (!web3) {
       return this.setState({
-        showModal: true,
+        showModal: true
       });
     }
 
@@ -838,11 +840,10 @@ class ShowAuction extends Component {
       this.setState({
         auction: {
           ...this.state.auction,
-          auctionState,
+          auctionState
         },
-        loading: false,
+        loading: false
       });
-
     } catch (e) {
       this.setState({
         loading: false
@@ -853,7 +854,7 @@ class ShowAuction extends Component {
   async bid ({bidAmount}) {
     if (!web3) {
       return this.setState({
-        showModal: true,
+        showModal: true
       });
     }
     const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
@@ -890,9 +891,9 @@ class ShowAuction extends Component {
     }
   }
 
-  toggleModal() {
+  toggleModal () {
     this.setState({
-      showModal: !this.state.showModal,
+      showModal: !this.state.showModal
     });
   }
 
@@ -939,10 +940,25 @@ const FinalizeAuction = props => {
   }
 
   if (props.auction.account !== props.auction.highestBidder &&
-    props.auction.account !== props.auction.escrowModerator) { // This second condition is a temporary solution. TODO: on escrowModerator should see link/info to the dispute (On chain dispute trigger?).
+    props.auction.account !== props.auction.escrowModerator && // { // This second condition is a temporary solution. TODO: on escrowModerator should see link/info to the dispute (On chain dispute trigger?).
+    props.auction.account !== props.auction.beneficiary) {
     return '';
   }
   let message = null;
+
+  if (props.auction.account === props.auction.beneficiary) {
+    return (
+      <Row className='bid-container'>
+        <Col><Form><Row className='mt-1'>
+
+          <Col xs={12} className='text-center mt-3 finalize-notice'>
+            <i className='fas fa-info-circle' />  The highest bidder must finalize the auction!
+          </Col>
+        </Row>
+        </Form></Col></Row>
+    );
+  }
+
   if (props.auction.account === props.auction.highestBidder) {
     message = 'You won the auction!';
   }
@@ -965,7 +981,7 @@ const FinalizeAuction = props => {
           <i className='fas fa-trophy' /> {message}
         </Col>
         <Col xs={12} className='text-center mt-3 finalize-notice'>
-          <i className='fas fa-info-circle' />  Finalizing the auction transfers the money to the beneficiary!
+          <i className='fas fa-info-circle' />  Finalize the auction to transfers the money to the beneficiary!
         </Col>
 
       </Row>
@@ -1137,8 +1153,8 @@ class Auction extends Component {
                 target='_blank'
                 rel='noopener noreferrer'
                 href={`https://${networkSubdomain}etherscan.io/address/${this.props.auction.address}`}>
-                  <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
-                </a>
+                <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
+              </a>
             </Col>
           </Row>
           <Row>
@@ -1336,12 +1352,11 @@ class App extends Component {
     window.gas = 500000; // max gas included. this must be replaced with estimateGas()
     console.log(gasPrices);
 
-
     window.onfocus = () => {
       windowInFocus = true;
     };
 
-    window.onblur = function() {
+    window.onblur = function () {
       windowInFocus = false;
     };
 
