@@ -22,7 +22,11 @@ import {
   InputGroup,
   Badge,
   FormGroup,
-  ListGroup
+  ListGroup,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from 'reactstrap';
 
 import { HashRouter, Route, withRouter, Link} from 'react-router-dom';
@@ -353,13 +357,21 @@ class CreateAuction extends Component {
     super(props);
     this.state = {
       loading: false,
-      loadingText: ''
+      loadingText: '',
+      showModal: false,
     };
 
     this.createAuction = this.createAuction.bind(this);
+    this.toggleModal = this.toggleModal.bind(this);
   }
 
   async createAuction (data) {
+    if (!web3) {
+      return this.setState({
+        showModal: true,
+      });
+    }
+
     this.setState({
       loading: true,
       loadingText: 'Deploying Contract'
@@ -413,9 +425,16 @@ class CreateAuction extends Component {
     });
   }
 
+  toggleModal() {
+    this.setState({
+      showModal: !this.state.showModal,
+    });
+  }
+
   render () {
     return (
       <LoadingOverlay background='rgba(255,255,255,.8)' color='#F60' active={this.state.loading} spinner text={this.state.loadingText}>
+        <MetaMaskModal isOpen={this.state.showModal} toggle={this.toggleModal} />
         <Row className='m-0'>
           <Col lg={5} className='accent-bg'>
             <Auctionify linkTo='my-auctions' />
@@ -720,16 +739,32 @@ class HighestBid extends Component {
   }
 }
 
+const MetaMaskModal = props => {
+  return (
+    <Modal isOpen={props.isOpen} toggle={props.toggle} className='metamask-modal'>
+      <ModalHeader toggle={props.toggle}>MetaMask Required</ModalHeader>
+      <ModalBody>
+        Auctionify currently only works with <a href='https://metamask.io/' rel='noopener noreferrer' target='_blank'>MetaMask!</a><br />
+      </ModalBody>
+      <ModalFooter>
+        <Button color='primary' size='sm' onClick={props.toggle}>Ok</Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
+
 class ShowAuction extends Component {
   constructor (props) {
     super(props);
     this.state = {
       loading: true,
-      loadingText: 'loading auction'
+      loadingText: 'loading auction',
+      showModal: false,
     };
 
     this.bid = this.bid.bind(this);
     this.finalize = this.finalize.bind(this);
+    this.toggleModal = this.toggleModal.bind(this);
   }
 
   async componentDidMount () {
@@ -770,6 +805,12 @@ class ShowAuction extends Component {
   }
 
   async finalize () {
+    if (!web3) {
+      return this.setState({
+        showModal: true,
+      });
+    }
+
     const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
 
     this.setState({
@@ -810,6 +851,11 @@ class ShowAuction extends Component {
   }
 
   async bid ({bidAmount}) {
+    if (!web3) {
+      return this.setState({
+        showModal: true,
+      });
+    }
     const contract = new web3.eth.Contract(smartContract.ABI, this.props.match.params.address);
 
     this.setState({
@@ -844,6 +890,12 @@ class ShowAuction extends Component {
     }
   }
 
+  toggleModal() {
+    this.setState({
+      showModal: !this.state.showModal,
+    });
+  }
+
   render () {
     let auction = (<div className='accent-bg auction-placeholder'><span /></div>);
     if (this.state.auction) {
@@ -851,6 +903,7 @@ class ShowAuction extends Component {
     }
     return (
       <LoadingOverlay background='rgba(255,255,255,.7)' color='#F60' active={this.state.loading} spinner text={this.state.loadingText}>
+        <MetaMaskModal isOpen={this.state.showModal} toggle={this.toggleModal} />
         {auction}
       </LoadingOverlay>
     );

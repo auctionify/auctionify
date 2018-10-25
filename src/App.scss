@@ -423,3 +423,27 @@ div[class^="sc"] {
     }
   }
 }
+
+.metamask-modal {
+  a {
+    color: $accent;
+  }
+
+  .modal-footer {
+    button {
+      padding: 6px 25px;
+
+      background-color: lighten($accent, 10%);
+      border-color: lighten($accent, 10%);
+
+      &:hover {
+        background-color: $accent;
+        border-color: $accent;
+      }
+      &:focus {
+        outline: 0;
+        box-shadow: none !important;
+      }
+    }
+  }
+}
