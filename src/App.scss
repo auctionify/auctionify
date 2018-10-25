@@ -40,6 +40,26 @@ body {
   }
 }
 
+@keyframes shake {
+  0%  { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .accent-bg {
   background: $accent;
 }
@@ -304,6 +324,20 @@ div.countdown {
       margin: 25px auto -5px auto;
       letter-spacing: -1px;
       font-size: 35px;
+    }
+
+    .highest-bid-indicator {
+      font-size: 14px;
+      position: absolute;
+      top: 1px;
+      right: 20px;
+      color: $accent;
+      animation: shake 0.15s infinite;
+      transition: all 0.3s;
+
+      &.hidden {
+        opacity: 0;
+      }
     }
 
     .bidder {
