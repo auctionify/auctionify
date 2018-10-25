@@ -4,6 +4,7 @@ import InputMoment from 'input-moment';
 import LoadingOverlay from 'react-loading-overlay';
 import auctionIcon from './images/auctionify.png';
 import ClickOutside from 'react-click-outside';
+import ReactMarkdown from 'react-markdown';
 import {beep} from './beep';
 import 'input-moment/dist/input-moment.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -340,7 +341,7 @@ const Auctionify = props => {
         </Col>
         <Col xl>
           <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
-          <div className='version'>v0.2.4</div>
+          <div className='version'>v0.2.5</div>
           {menu}
         </Col>
       </div>
@@ -1096,9 +1097,7 @@ class Auction extends Component {
         <Col className='py-4'>
           <Container>
             <Row><Col>
-              <p id='auction-description'>{auction.description.split(/\n/).map((line, key) => {
-                return <Fragment key={key}>{line}<br /></Fragment>;
-              })}</p>
+              <ReactMarkdown id='auction-description' source={auction.description} />
             </Col></Row>
             <FinalizeAuction onClick={this.finalize} show={this.state.finished} auction={auction} />
             <BidAuction show={!this.state.finished} onBid={this.onBid} auction={auction} />
