@@ -336,7 +336,7 @@ const Auctionify = props => {
         </Col>
         <Col xl>
           <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
-          <div className='version'>v0.2.1</div>
+          <div className='version'>v0.2.2</div>
           {menu}
         </Col>
       </div>
