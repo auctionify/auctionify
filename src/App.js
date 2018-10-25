@@ -4,6 +4,7 @@ import InputMoment from 'input-moment';
 import LoadingOverlay from 'react-loading-overlay';
 import auctionIcon from './images/auctionify.png';
 import ClickOutside from 'react-click-outside';
+import {beep} from './beep';
 import 'input-moment/dist/input-moment.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './datepicker.scss';
@@ -22,6 +23,7 @@ import {
   FormGroup,
   ListGroup
 } from 'reactstrap';
+
 import { HashRouter, Route, withRouter, Link} from 'react-router-dom';
 
 import {getWeb3} from './web3';
@@ -38,6 +40,8 @@ let web3,
   toWei,
   accounts = [],
   WEI_STEP = '10000000000000000';
+
+let windowInFocus = true;
 
 class AuctionStorage {
   static add (item) {
@@ -336,7 +340,7 @@ const Auctionify = props => {
         </Col>
         <Col xl>
           <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
-          <div className='version'>v0.2.2</div>
+          <div className='version'>v0.2.3</div>
           {menu}
         </Col>
       </div>
@@ -617,6 +621,7 @@ class HighestBid extends Component {
   constructor (props) {
     super(props);
     this.state = {
+      showIndicator: false,
       style: {
       }
     };
@@ -626,8 +631,36 @@ class HighestBid extends Component {
     this.resize();
   }
 
+  hideIndicatorOnFocus() {
+    clearInterval(this.intervalId);
+    clearTimeout(this.timeoutId);
+
+    this.intervalId = setInterval(() => {
+      if (windowInFocus) {
+        clearInterval(this.intervalId);
+        this.timeoutId = setTimeout(() => {
+          this.setState({
+            showIndicator: false,
+          });
+        }, 10000)
+      }
+    }, 1000);
+  };
+
+  componentWillUnmount() {
+    clearInterval(this.intervalId);
+    clearTimeout(this.timeoutId);
+  }
+
   componentDidUpdate (prevProps) {
     if (this.props.bid === prevProps.bid) return;
+
+    beep();
+    this.setState({
+      showIndicator: true,
+    });
+    this.hideIndicatorOnFocus();
+
     this.resize();
   }
 
@@ -663,6 +696,9 @@ class HighestBid extends Component {
         lg={{size: 4, offset: 4}}
       >
         <div className='highest-bid container' ref={el => this.containerEl = el}>
+          <div className={`highest-bid-indicator ${this.state.showIndicator ? '' : 'hidden'}`}>
+            <i className="fas fa-bell"></i>
+          </div>
           <div className='hb-label' style={this.state.style} ref={el => this.boxLabelEl = el}>
             <i className='fa fa-trophy' /> &nbsp;Highest Bid
           </div>
@@ -1247,6 +1283,15 @@ class App extends Component {
     window.gasPrice = (gasPrices.average / 10) + 10; // Some price optimization
     window.gas = 500000; // max gas included. this must be replaced with estimateGas()
     console.log(gasPrices);
+
+
+    window.onfocus = () => {
+      windowInFocus = true;
+    };
+
+    window.onblur = function() {
+      windowInFocus = false;
+    };
 
     this.setState({
       loaded: true
