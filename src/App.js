@@ -755,19 +755,21 @@ class ShowAuction extends Component {
           loading: false
         });
       });
+
+      const auctionState = await contract.methods.auctionState().call();
       this.setState({
-        loading: false
+        auction: {
+          ...this.state.auction,
+          auctionState,
+        },
+        loading: false,
       });
+
     } catch (e) {
       this.setState({
         loading: false
       });
     }
-
-    this.setState({
-      loading: true,
-      loadingText: 'Sending Transaction'
-    });
   }
 
   async bid ({bidAmount}) {
@@ -825,9 +827,8 @@ const AuctionEndStatus = props => {
   if (props.highestBidder === '0x0000000000000000000000000000000000000000') {
     label += ' without a winner';
   }
-
   if (props.auctionState === '2') {
-    label = ' Auction is Finalized!';
+    label = 'Auction is finalized!';
   }
 
   return (
@@ -842,7 +843,7 @@ const AuctionEndStatus = props => {
 const FinalizeAuction = props => {
   if (!props.show) return '';
 
-  if (props.auction.auctionState == 2) { // for === maybe bigNum?
+  if (props.auction.auctionState === '2') { // for === maybe bigNum?
     // TODO: show button to call cleanUpAfterYourself() to everyone
     return '';
   }
@@ -1042,7 +1043,12 @@ class Auction extends Component {
             <Col>
               <h1 id='auction-title'> {auction.title}</h1>
               <FavoriteStar faved={this.state.faved} onToggle={this.onToggleFav} />
-              <a target='_blank' rel='noopener noreferrer' href={`https://${networkSubdomain}etherscan.io/address/${this.props.auction.address}`}> <div className='network-name'><i className='fal fa-network-wired' /> {network}</div> </a>
+              <a
+                target='_blank'
+                rel='noopener noreferrer'
+                href={`https://${networkSubdomain}etherscan.io/address/${this.props.auction.address}`}>
+                  <div className='network-name'><i className='fal fa-network-wired' /> {network}</div>
+                </a>
             </Col>
           </Row>
           <Row>

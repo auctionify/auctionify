@@ -44,6 +44,19 @@ body {
   background: $accent;
 }
 
+.network-name {
+  text-transform: capitalize;
+  position: relative;
+  color: white;
+  top: -5px;
+
+  .fal {
+    font-size: 11px;
+    position: relative;
+    top: -1px;    
+  }
+}
+
 
 .brand {
   display: flex;
@@ -55,11 +68,6 @@ body {
     font-weight: 300;
   }
 
-  .network-name {
-    text-transform: capitalize;
-    position: relative;
-    top: -5px;
-  }
 
   .version {
     font-size: 12px;
@@ -67,11 +75,6 @@ body {
     top: -8px;
   }
 
-  .fal {
-    font-size: 11px;
-    position: relative;
-    top: -1px;    
-  }
 }
 
 .form-group {
@@ -335,6 +338,10 @@ div.countdown {
     font-size: 13px;
     transform: rotate(-90.0deg);
     transform-origin: left top 0;
+  }
+
+  a:hover {
+    text-decoration: none;
   }
 }
 
