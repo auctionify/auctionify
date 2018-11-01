@@ -1,4 +1,4 @@
-$accent: #F60;
+$accent: theme-color("primary");
 
 #date-picker-container {
   width: 100%;
@@ -6,11 +6,13 @@ $accent: #F60;
 }
 #datepicker {
   position: absolute;
-  background-color: white;
+  background-color: $input-bg;
+  border-color: $input-border-color;
   z-index: 999;
-  border-radius: 0;
+  border-radius: 10px;
   display: none;
   width: inherit;
+  top: -195px;
 }
 #datepicker.visible {
   display: block;
@@ -19,16 +21,19 @@ $accent: #F60;
   background: none;
   -webkit-appearance: none;
   border-color: $accent;
-  color: $accent;
   border-radius: 0;
   transition: all 0.3s;
 }
 #datepicker button:focus {
   outline: 0;
 }
-#datepicker .options button.is-active {
-  background: $accent;
-  color: #EEE;
+#datepicker .options button{
+  color: darken(white, 20%);
+
+  &.is-active {
+    background: $accent;
+    color: white;
+  }
 }
 #datepicker div.toolbar button {
   border-radius: 0;
@@ -42,7 +47,7 @@ $accent: #F60;
   color: black;
 }
 #datepicker .current-date {
-  color: $accent;
+  color: white;
   text-transform: uppercase;
 }
 #datepicker table thead tr td {
@@ -56,12 +61,16 @@ $accent: #F60;
 #datepicker button.btn-save {
   border-radius: 0;
   background: $accent;
-  color: #EEE;
+  color: white;
 }
 #datepicker .m-calendar tbody td:hover {
   background: $accent;
   border-color: black;
   color: white !important;
+}
+
+#datepicker .m-calendar tbody td {
+  color: white;
 }
 
 #datepicker .showtime .time{
@@ -83,6 +92,8 @@ $accent: #F60;
   border: 0;
 }
 
-#datepicker .m-calendar .next-month, .m-calendar .prev-month {
-  color: #aaa;
+#datepicker .m-calendar tbody td.next-month, #datepicker .m-calendar tbody td.prev-month {
+  color: #999;
 }
+
+

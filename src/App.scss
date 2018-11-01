@@ -1,32 +1,221 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400,700');
+@import url('https://fonts.googleapis.com/css?family=IBM+Plex+Sans');
 
-$accent: #F60;
 
-html, body, #root{
-  height:100%;
-  margin:0;
-  padding:0
+$body-bg: #121213;
+
+$section-border-color: #343436;
+$section-rounded-corners: 26px;
+$section-bg: #222224;
+
+$input-bg: #282935;
+$input-border-color: #323652;
+
+$dashed-border-bg: linear-gradient(
+  to right,
+  #333 50%,
+  rgba(255, 255, 255, 0) 50%
+);
+$theme-colors: (
+  "primary": #5b67ca,
+);
+
+@import "~bootstrap/scss/bootstrap";
+@import '~input-moment/dist/input-moment.css';
+@import './datepicker.scss';
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  font-size: 130%;
 }
 
 body {
-  background: #e4edf2;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  font-family: 'Roboto Condensed', sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  line-height: 60px;
+  background-color: darken($section-bg, 3%);
+  border-top: 1px solid $section-border-color;
+
+  & > .container {
+    max-width: 500px;
+  }
+
+  color: darken(white, 40%);
+  font-size: 14px;
+  a {
+    color: darken(white, 20%);
+    &:hover {
+      text-decoration: none;
+      color: white;
+    }
+  }
+
+  span.sep:before {
+    content: "|";
+    padding: 0px 10px;
+  }
 }
 
 .main-container {
   padding: 0;
   height: 100%;
   display: flex;
+  max-width: 500px;
 }
 
 .main {
-  align-self: center;  
+  align-self: center;
   margin: auto;
-  background-color: #fff;
+  padding: 10px;
+}
+
+.section {
   box-shadow: 0px 12px 46px -15px rgba(0,0,0,0.35);
-  padding: 0px;
+
+  color: white;
+  position: relative;
+  overflow: hidden;
+
+  .rounded-section {
+    background-color: $section-bg;
+    border: 1px solid $section-border-color;
+    padding: 20px;
+
+    h2 {
+      padding: 5px 0px;
+
+      &:before {
+        content: "● ";
+        position: "relative";
+        font-size: 110%;
+        overflow: hidden;
+        color: theme-color("primary");
+      }
+    }
+
+    &:before,
+    &:after,
+    & > div:before,
+    & > div:after {
+      content: '';
+      position: absolute;
+      z-index: 999;
+      background: $body-bg;
+      width: $section-rounded-corners;
+      height: $section-rounded-corners;
+      border: 1px solid $section-border-color;
+      border-radius: 999px;
+    }
+
+    & > div:before,
+    & > div:after {
+      display: none;
+    }
+
+    &.top {
+      border-bottom: 0;
+      background-image: $dashed-border-bg;
+      background-position: bottom;
+      background-size: 20px 1px;
+      background-repeat: repeat-x;
+
+      border-radius: $section-rounded-corners/2 $section-rounded-corners/2 0px 0px;
+
+      &:before {
+        bottom: -($section-rounded-corners/2);
+        right: -($section-rounded-corners/2);
+      }
+
+      &:after {
+        bottom: -($section-rounded-corners/2);
+        left: -($section-rounded-corners/2);
+      }
+    }
+
+    &.bottom {
+      border-top: 0;
+      border-radius: 0px 0px $section-rounded-corners/2 $section-rounded-corners/2;
+
+      &:before {
+        top: -($section-rounded-corners/2);
+        right: -($section-rounded-corners/2);
+      }
+
+      &:after {
+        top: -($section-rounded-corners/2);
+        left: -($section-rounded-corners/2);
+      }
+    }
+
+    &.middle {
+      border-bottom: 0;
+      border-top: 0;
+
+      background-image: $dashed-border-bg;
+      background-position: bottom;
+      background-size: 20px 1px;
+      background-repeat: repeat-x;
+
+      border-radius: $section-rounded-corners/2 $section-rounded-corners/2 0px 0px;
+
+      &:before {
+        bottom: -($section-rounded-corners/2);
+        right: -($section-rounded-corners/2);
+      }
+
+      &:after {
+        bottom: -($section-rounded-corners/2);
+        left: -($section-rounded-corners/2);
+      }
+
+      & > div {
+        &:before {
+          display: inherit;
+          top: -($section-rounded-corners/2);
+          right: -($section-rounded-corners/2);
+        }
+
+        &:after {
+          display: inherit;
+          top: -($section-rounded-corners/2);
+          left: -($section-rounded-corners/2);
+        }
+      }
+    }
+
+    &.unstyled {
+      padding: 20px 0px;
+      background: none;
+      border: 0;
+
+      &:before {
+        display: none;
+      }
+
+      &:after {
+        display: none;
+      }
+    }
+  }
 }
 
 @media (max-width: 991.98px) {
@@ -35,18 +224,22 @@ body {
   }
 }
 
-@media (max-width: 575.98px) {
-  .main {
-    box-shadow: none;
-  }
-}
-
 @keyframes shake {
-  0%  { transform: rotate(0deg); }
-  25% { transform: rotate(-10deg); }
-  50% { transform: rotate(0deg); }
-  75% { transform: rotate(10deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 @keyframes heartbeat {
@@ -61,389 +254,547 @@ body {
   }
 }
 
-.accent-bg {
-  background: $accent;
-}
-
-.network-name {
-  text-transform: capitalize;
+.input-container {
   position: relative;
-  color: white;
-  top: -5px;
+  margin: 5px 0px;
 
-  .fal {
-    font-size: 11px;
-    position: relative;
-    top: -1px;    
-  }
-}
-
-
-.brand {
-  display: flex;
-  height: 100%;
-  color: white;
-
-  h1 {
-    margin: 10px 0px 0px 0px;
-    font-weight: 300;
+  label.inp-label {
+    position: absolute;
+    z-index: 99;
+    top: 16px;
+    left: 16px;
+    transition: all 0.2s;
+    opacity: 0.6;
+    cursor: text;
+    user-select: none;
   }
 
+  input, select, textarea {
+    border-radius: 10px;
+    background-color: $input-bg;
+    color: white;
+    border: 1px solid $input-border-color;
+    padding: 27px 15px;
 
-  .version {
-    font-size: 12px;
-    position: relative;
-    top: -8px;
-  }
+    &:focus {
+      background-color: $input-bg;
+      border-color: $input-border-color;
+      box-shadow: none;
+      color: white;
+      padding: 34px 15px 20px 15px;
+    }
 
-}
-
-.form-group {
-  margin-bottom: 5px;
-
-  &.is-invalid {
-    input, input:focus {
-      border-bottom: 2px solid red;
-
-      & + .input-group-append .input-group-text {
-        border-bottom: 2px solid red !important;
-        color: red;
-      }
+    &::placeholder {
+      color: transparent;
     }
   }
-}
 
-.input-group {
-  margin-top: 35px;
+  select {
+    padding: 12px 50px 0px 15px;
+    height: 56px;
+    appearance: none;
+
+    background: $input-bg url('./images/arrow-down.png') no-repeat right !important;
+    background-size: 30px 15px !important;
+
+    &:focus {
+      background: $input-bg url('./images/arrow-down.png') no-repeat right !important;
+      background-size: 30px 15px !important;
+      padding: 12px 50px 0px 15px;
+    }
+  }
+
+  textarea {
+    height: 56px;
+    &:focus {
+      height: 56px;
+      padding-top: 20px;
+    }
+  }
 
   .input-group-text {
-    background: none !important;
-    border: none !important;
-    border-bottom: solid 2px #e8ebed !important;
-    border-radius: 0 !important;
+    transition: all 0.3s;
+    background-color: $input-bg;
+    border: 1px solid $input-border-color;
     cursor: default;
-    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-    color: gray;
+    color: white;
+    min-width: 50px;
+    justify-content: center;
   }
 
-  input:focus + .input-group-append .input-group-text {
-    border-bottom: 2px solid #777 !important;
-  }
-}
-
-input.withFlyingLabel,
-textarea.withFlyingLabel,
-select.withFlyingLabel {
-  background: none;
-  border-radius: 0;
-  border: 0;
-  border-bottom: 2px solid #e8ebed;
-  font-size: 16px;
-  padding: 6px 0px;
-
-  &:focus {
-    outline: 0;
-    box-shadow: none !important;
-    -webkit-box-shadow: none !important;
-    border-bottom: 2px solid #777;
+  &.up {
+    label.inp-label {
+      opacity: 0.8;
+      font-size: 70%;
+      top: 5px;
+    }
+    input {
+      padding: 34px 15px 20px 15px;
+    }
   }
 
-  &[readonly] {
-    background-color: white;
-  }
-}
-
-select.withFlyingLabel {
-  -webkit-appearance: none;
-}
-select {
-  background: url('https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-ios7-arrow-down-32.png') no-repeat right !important;
-  background-size:16px 17px !important;
-}
-
-label.flyingLabel {
-  position: absolute;
-  font-weight: bold;
-  opacity: 0;
-  top: -5px;
-  transition: all 0.3s;
-  font-size: 14px;
   
-  &.visible {
-    top: -16px;
-    opacity: 0.85;
-  }
-}
-.winner-notice, .finalize-notice {
-  color: gray;
-  font-size: 14px;
-}
-#createAuctionBtn, #bid, #fin, #menu-btn {
-  padding: 6px 25px;
 
-  background-color: lighten($accent, 10%);
-  border-color: lighten($accent, 10%);
-
-  &:hover {
-    background-color: $accent;
-  }
-  &:focus {
-    outline: 0;
-    box-shadow: none !important;
-  }
-}
-
-div.countdown {
-  text-align: center;
-  white-space: nowrap;
-
-  .section {
-    display: inline-block;
-
-    span.label {
-      text-transform: uppercase;
-      font-size: 12px;
-      font-weight: 700;
+  &.focused {
+    input {
+      border-color: #007bff;
+    }
+    .input-group-text {
+      border: 1px solid #007bff; 
+    }
+    input:not(:last-child), select:not(:last-child) {
+      border-right-color: $input-border-color;
     }
   }
-  .time, .separater {
-    background: #474544;
-    display: inline-block;
-    border-radius: 3px;
-    width: 60px;
-    height: 60px;
-    font-size: 40px;
-    line-height: 60px;
-    text-align: center;
-    color: #fff;
-  }
 
-  .separater {
-    background: none;
-    width: 20px;
-    text-align: center;
-    font-weight: 700;
-  }
-}
-
-
-.footer {
-  position: absolute;
-  padding: 15px 2px;
-  color: gray;
-  font-size: 14px;
-  a {
-    color: gray;
-    &:hover {
-      text-decoration: none;
-      color: black;
+  &.is-invalid {
+    input, select {
+      border-color: red;
+      border-right-color: $input-border-color;
+    }
+    .input-group-text {
+      border: 1px solid red; 
     }
   }
-  .row > div {
-    margin-bottom: 6px;
-  }
-}
-@keyframes move {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 50px 50px;
-  }
 }
 
-.auction-placeholder {
-  height: 400px;
+.form-check-input {
+  visibility: hidden;
 
-  &:after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; bottom: 0; right: 0;
-    background-image: linear-gradient(
-      -45deg, 
-      rgba(255, 255, 255, .1) 25%, 
-      transparent 25%, 
-      transparent 50%, 
-      rgba(255, 255, 255, .1) 50%, 
-      rgba(255, 255, 255, .1) 75%, 
-      transparent 75%, 
-      transparent
-    );
-    z-index: 1;
-    background-size: 50px 50px;
-    animation: move 2s linear infinite;
-    overflow: hidden;
-  }
-}
-.fav-star {
-  display: inline-block;
-  margin: 0px 8px;
-  cursor: pointer;
-
-  .icon {
+  & + label {
+    margin-top: 3px;
+    cursor: pointer;
+    width: 38px;
+    height: 22px;
+    background: $input-bg;
+    display: block;
+    border-radius: 100px;
     position: relative;
-    top: -10px;
-    font-size: 20px;
+    border: 1px solid $input-border-color;
 
-    &.fa-star {
-      background-color: #f06543;
-      background-image: linear-gradient(315deg, darken(yellow, 10%) 0%, yellow 74%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-}
-.fa.golden {
-  background-color: #f06543;
-  background-image: linear-gradient(315deg, darken(yellow, 10%) 0%, darken(yellow, 8%) 74%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.auction-header {
-  text-align: center;
-  color: white;
-  padding-top: 30px;
-  padding-bottom: 30px;
-
-  #auction-title {
-    text-transform: uppercase;
-    font-size: 3em;
-    margin-bottom: 10px;
-    display: inline-block;
-  }
-
-  .highest-bid {
-    background: #fefefe;
-    border-radius: 3px;
-    text-align: center;
-    color: black;
-    text-transform: uppercase;
-    padding: 5px;
-    margin-bottom: 20px;
-
-    h3 {
-      margin: 25px auto -5px auto;
-      letter-spacing: -1px;
-      font-size: 35px;
-    }
-
-    .highest-bid-indicator {
-      font-size: 14px;
+    & > .switch {
+      content: '';
       position: absolute;
       top: 1px;
-      right: 20px;
-      color: $accent;
-      animation: shake 0.15s infinite;
-      transition: all 0.3s;
+      left: 1px;
+      width: 18px;
+      height: 18px;
+      background: gray;
+      border-radius: 90px;
+      transition: 0.3s;
 
-      &.hidden {
+      & > .icon {
         opacity: 0;
-      }
-    }
-
-    .bidder {
-      font-size: 14px;
-      margin-bottom: 20px;
-      color: #333;
-
-      .you {
-        border-radius: 2px;
-        background: $accent;
-        border: 0;
-        margin-left: 5px;
+        transition: 0.3s;
+        font-size: 12px;
         position: relative;
-        top: -1px;
-
-        &.hidden {
-          display: none;
-        }
+        top: -4px;
+        left: 3px;
       }
     }
-
   }
 
-  .hb-label {
-    position: absolute;
-    height: auto;
-    background: #474544;
-    border-radius: 3px 3px 0px 0px;
-    color: white;
-    padding: 4px 0px;
-    z-index: 1;
-    font-size: 13px;
-    transform: rotate(-90.0deg);
-    transform-origin: left top 0;
+  &:checked + label {
+    background: $input-bg;
+    
+    & > .switch {
+      background: theme-color("primary");
+      left: calc(100% - 1px);
+      transform: translateX(-100%);
+
+      & > .icon {
+        opacity: 1;
+      }
+    }
   }
 
-  a:hover {
-    text-decoration: none;
+  & + label:active {
+    & > .switch > .icon {
+      opacity: 0.5;
+    }
   }
 }
 
-.bid-container {
-  border-top: 2px solid $accent;
+.icon.tip {
+  color: gray;
+  position: relative;
+  top: 1px;
+  left: 2px;
+}
+
+
+#createAuctionBtn {
   margin-top: 10px;
-  padding-top: 10px;
-}
+  padding: 16px;
 
-div[class^="sc"] {
-  text-transform: uppercase;
-}
-
-.auctions-list {
-  min-height: 300px;
-
-  .addr {
-    .fa {
-      position: relative;
-      top: 0px;
-      font-size: 12px;
-    }
+  &:focus {
+    outline: 0;
+    box-shadow: none !important;
   }
-  a {
-    text-decoration: none;
+}
+#connect-wallet-btn {
+  padding: 10px 20px;
+  font-size: 80%;
+  &:focus {
+    outline: 0;
+    box-shadow: none !important;
+  }
+}
+.header {
+  img#logo {
+    width: 50px;
+  }
+  h4 {
+    display: inline;
+    padding: 0;
+    margin: 0;
     position: relative;
-    top: 1px;
-
-    &.to-auction {
-      color: $accent;
-    }
-  }
-
-
-  .desc {
-    position: absolute;
-    right: 0;
-    & a {
-      color: $accent;
-      cursor: pointer;
-      &:hover {
-        color: red;
-      }
-    }
+    top: 5px;
+    left: 5px;
   }
 }
 
-.metamask-modal {
-  a {
-    color: $accent;
-  }
-
-  .modal-footer {
-    button {
-      padding: 6px 25px;
-
-      background-color: lighten($accent, 10%);
-      border-color: lighten($accent, 10%);
-
-      &:hover {
-        background-color: $accent;
-        border-color: $accent;
-      }
-      &:focus {
-        outline: 0;
-        box-shadow: none !important;
-      }
-    }
-  }
+button {
+  // border-radius: 7px !important;
 }
+
+// .network-name {
+//   text-transform: capitalize;
+//   position: relative;
+//   color: white;
+//   top: -5px;
+
+//   .fal {
+//     font-size: 11px;
+//     position: relative;
+//     top: -1px;
+//   }
+// }
+
+// .brand {
+//   display: flex;
+//   height: 100%;
+//   color: white;
+
+//   h1 {
+//     margin: 10px 0px 0px 0px;
+//     font-weight: 300;
+//   }
+
+//   .version {
+//     font-size: 12px;
+//     position: relative;
+//     top: -8px;
+//   }
+
+// }
+
+// .form-group {
+//   margin-bottom: 5px;
+
+//   &.is-invalid {
+//     input, input:focus {
+//       border-bottom: 2px solid red;
+
+//       & + .input-group-append .input-group-text {
+//         border-bottom: 2px solid red !important;
+//         color: red;
+//       }
+//     }
+//   }
+// }
+
+// input.withFlyingLabel,
+// textarea.withFlyingLabel,
+// select.withFlyingLabel {
+//   background: none;
+//   border-radius: 0;
+//   border: 0;
+//   border-bottom: 2px solid #e8ebed;
+//   font-size: 16px;
+//   padding: 6px 0px;
+
+//   &:focus {
+//     outline: 0;
+//     box-shadow: none !important;
+//     -webkit-box-shadow: none !important;
+//     border-bottom: 2px solid #777;
+//   }
+
+//   &[readonly] {
+//     background-color: white;
+//   }
+// }
+
+// select.withFlyingLabel {
+//   -webkit-appearance: none;
+// }
+// select {
+//   background: url('https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-ios7-arrow-down-32.png') no-repeat right !important;
+//   background-size:16px 17px !important;
+// }
+
+// label.flyingLabel {
+//   position: absolute;
+//   font-weight: bold;
+//   opacity: 0;
+//   top: -5px;
+//   transition: all 0.3s;
+//   font-size: 14px;
+
+//   &.visible {
+//     top: -16px;
+//     opacity: 0.85;
+//   }
+// }
+// .winner-notice, .finalize-notice {
+//   color: gray;
+//   font-size: 14px;
+// }
+
+
+// div.countdown {
+//   text-align: center;
+//   white-space: nowrap;
+
+//   .section {
+//     display: inline-block;
+
+//     span.label {
+//       text-transform: uppercase;
+//       font-size: 12px;
+//       font-weight: 700;
+//     }
+//   }
+//   .time, .separater {
+//     background: #474544;
+//     display: inline-block;
+//     border-radius: 3px;
+//     width: 60px;
+//     height: 60px;
+//     font-size: 40px;
+//     line-height: 60px;
+//     text-align: center;
+//     color: #fff;
+//   }
+
+//   .separater {
+//     background: none;
+//     width: 20px;
+//     text-align: center;
+//     font-weight: 700;
+//   }
+// }
+
+// .footer {
+//   position: absolute;
+//   padding: 15px 2px;
+//   color: gray;
+//   
+//   .row > div {
+//     margin-bottom: 6px;
+//   }
+// }
+// @keyframes move {
+//   0% {
+//     background-position: 0 0;
+//   }
+//   100% {
+//     background-position: 50px 50px;
+//   }
+// }
+
+// .auction-placeholder {
+//   height: 400px;
+
+//   &:after {
+//     content: "";
+//     position: absolute;
+//     top: 0; left: 0; bottom: 0; right: 0;
+//     background-image: linear-gradient(
+//       -45deg,
+//       rgba(255, 255, 255, .1) 25%,
+//       transparent 25%,
+//       transparent 50%,
+//       rgba(255, 255, 255, .1) 50%,
+//       rgba(255, 255, 255, .1) 75%,
+//       transparent 75%,
+//       transparent
+//     );
+//     z-index: 1;
+//     background-size: 50px 50px;
+//     animation: move 2s linear infinite;
+//     overflow: hidden;
+//   }
+// }
+// .fav-star {
+//   display: inline-block;
+//   margin: 0px 8px;
+//   cursor: pointer;
+
+//   .icon {
+//     position: relative;
+//     top: -10px;
+//     font-size: 20px;
+
+//     &.fa-star {
+//       background-color: #f06543;
+//       background-image: linear-gradient(315deg, darken(yellow, 10%) 0%, yellow 74%);
+//       -webkit-background-clip: text;
+//       -webkit-text-fill-color: transparent;
+//     }
+//   }
+// }
+// .fa.golden {
+//   background-color: #f06543;
+//   background-image: linear-gradient(315deg, darken(yellow, 10%) 0%, darken(yellow, 8%) 74%);
+//   -webkit-background-clip: text;
+//   -webkit-text-fill-color: transparent;
+// }
+// .auction-header {
+//   text-align: center;
+//   color: white;
+//   padding-top: 30px;
+//   padding-bottom: 30px;
+
+//   #auction-title {
+//     text-transform: uppercase;
+//     font-size: 3em;
+//     margin-bottom: 10px;
+//     display: inline-block;
+//   }
+
+//   .highest-bid {
+//     background: #fefefe;
+//     border-radius: 3px;
+//     text-align: center;
+//     color: black;
+//     text-transform: uppercase;
+//     padding: 5px;
+//     margin-bottom: 20px;
+
+//     h3 {
+//       margin: 25px auto -5px auto;
+//       letter-spacing: -1px;
+//       font-size: 35px;
+//     }
+
+//     .highest-bid-indicator {
+//       font-size: 14px;
+//       position: absolute;
+//       top: 1px;
+//       right: 20px;
+//       color: $accent;
+//       animation: shake 0.15s infinite;
+//       transition: all 0.3s;
+
+//       &.hidden {
+//         opacity: 0;
+//       }
+//     }
+
+//     .bidder {
+//       font-size: 14px;
+//       margin-bottom: 20px;
+//       color: #333;
+
+//       .you {
+//         border-radius: 2px;
+//         background: $accent;
+//         border: 0;
+//         margin-left: 5px;
+//         position: relative;
+//         top: -1px;
+
+//         &.hidden {
+//           display: none;
+//         }
+//       }
+//     }
+
+//   }
+
+//   .hb-label {
+//     position: absolute;
+//     height: auto;
+//     background: #474544;
+//     border-radius: 3px 3px 0px 0px;
+//     color: white;
+//     padding: 4px 0px;
+//     z-index: 1;
+//     font-size: 13px;
+//     transform: rotate(-90.0deg);
+//     transform-origin: left top 0;
+//   }
+
+//   a:hover {
+//     text-decoration: none;
+//   }
+// }
+
+// .bid-container {
+//   border-top: 2px solid $accent;
+//   margin-top: 10px;
+//   padding-top: 10px;
+// }
+
+// div[class^="sc"] {
+//   text-transform: uppercase;
+// }
+
+// .auctions-list {
+//   min-height: 300px;
+
+//   .addr {
+//     .fa {
+//       position: relative;
+//       top: 0px;
+//       font-size: 12px;
+//     }
+//   }
+//   a {
+//     text-decoration: none;
+//     position: relative;
+//     top: 1px;
+
+//     &.to-auction {
+//       color: $accent;
+//     }
+//   }
+
+//   .desc {
+//     position: absolute;
+//     right: 0;
+//     & a {
+//       color: $accent;
+//       cursor: pointer;
+//       &:hover {
+//         color: red;
+//       }
+//     }
+//   }
+// }
+
+// .metamask-modal {
+//   a {
+//     color: $accent;
+//   }
+
+//   .modal-footer {
+//     button {
+//       padding: 6px 25px;
+
+//       background-color: lighten($accent, 10%);
+//       border-color: lighten($accent, 10%);
+
+//       &:hover {
+//         background-color: $accent;
+//         border-color: $accent;
+//       }
+//       &:focus {
+//         outline: 0;
+//         box-shadow: none !important;
+//       }
+//     }
+//   }
+// }
