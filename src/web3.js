@@ -16,7 +16,7 @@ export async function getWeb3() {
     network = network === 'main' ? 'mainnet' : network;
   }
 
-  const readOnlyWeb3 = new Web3(new Web3.providers.WebsocketProvider(`wss://${network}.infura.io/ws/`));
+  const readOnlyWeb3 = new Web3(new Web3.providers.WebsocketProvider(`wss://${network}.infura.io/ws/v3/462d104bd22247fcb9d06380b232ef64`));
   return {
     web3,
     readOnlyWeb3,
