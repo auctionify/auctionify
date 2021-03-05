@@ -74,6 +74,20 @@ Bidder 1 ---------> |Auction|<----------------- Bidder 3
 
 ---
 
+## Usage
+
+### Run Locally
+```bash
+yarn install
+yarn start
+```
+
+### Deploy
+```bash
+yarn deploy
+```
+
+
 ### TODO:
 - ENS resolver for escrows (.eth to Eth address)
   - Defaults to `auctionify.eth`
